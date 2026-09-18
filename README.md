@@ -120,8 +120,8 @@ data commit.
 
 ## Signing (`census/peers.json.sig`)
 
-The list is a trust input for the wallet, so the daily job signs it when the
-owner has set a key, and the wallet verifies the signature against the public
+The list is a trust input for the wallet, so every published list must be
+signed. The wallet verifies the signature against the public
 keys compiled into its `CensusPublisher` (see the wallet's
 `docs/census-signing.md`). Ed25519 over the tag `winnow-census-peers-v1\0` and
 the file's exact bytes:
@@ -136,12 +136,21 @@ WinnowCensus sign --key-env CENSUS_SIGNING_KEY census/peers.json
 WinnowCensus verify [--public-key HEX] census/peers.json
 ```
 
-Store the secret as the repository's `CENSUS_SIGNING_KEY` Actions secret; the
-daily job signs after every accepted run and says in its log when it could
-not. Until the wallet compiles a key in, it accepts the list unsigned, so the
-secret can be set first and the wallet updated after a signed run exists. The
-Site workflow validates the list and, when present, its signature before
-deploying, so a direct push to `census/**` no longer serves unchecked data.
+The secret is stored as the repository's `CENSUS_SIGNING_KEY` Actions secret.
+The matching public key is in `census/signing-public-key.txt` and compiled into
+the wallet. The daily job signs every accepted list and verifies against that
+pinned key before committing or deploying. A missing or mismatched secret
+fails publication and leaves the last published list available.
+
+The Site workflow requires the same signature even for direct data changes;
+it refuses missing signatures, modified bytes, and signatures from other keys.
+Contract tests verify the committed list against the pinned key too.
+
+For rotation, first ship the new public key alongside the old key in the
+wallet. Then replace the Actions secret, update the publisher's public key,
+and publish a matching signed list together. Remove the old wallet key only
+after supported wallet versions trust the replacement. Never commit the
+private key or include it in logs.
 
 Onion and I2P entries are sampled by a per-day hash of the address rather than
 taken in latency order, so the overlay cap is a sample of the day's reachable

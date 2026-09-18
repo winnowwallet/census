@@ -41,18 +41,13 @@ jobs:
       - name: Validate what is about to be served
         # The daily job validates its own output before it commits. A direct
         # push to census/** used to deploy without any check; now nothing is
-        # served that the shared validator refuses, and a signature that is
-        # present must match the list beside it.
+        # served without validation and a signature from the pinned publisher.
         env:
           GIT_LFS_SKIP_SMUDGE: "1"
         run: |
           swift build -c release --product WinnowCensus
           .build/release/WinnowCensus --validate-peer-list census/peers.json
-          if [ -f census/peers.json.sig ]; then
-            .build/release/WinnowCensus verify census/peers.json
-          else
-            echo "::warning::census/peers.json is unsigned"
-          fi
+          .build/release/WinnowCensus verify --public-key "$(cat census/signing-public-key.txt)" census/peers.json
 
       - name: Assemble the site
         # Only the page and the data are published; the tool's sources and
