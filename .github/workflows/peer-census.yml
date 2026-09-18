@@ -159,18 +159,10 @@ jobs:
           CENSUS_SIGNING_KEY: ${{ secrets.CENSUS_SIGNING_KEY }}
         run: |
           scripts/census-publish summary.json --peers peers.json --records census.jsonl --dir census
-          # The publisher's signature over the list (README, "Signing"). Made
-          # with the owner's key when it is set; until then the list ships
-          # unsigned and the wallet accepts it as such, and a signature left
-          # over from an older list is removed so it cannot contradict this
-          # one.
-          if [ -n "${CENSUS_SIGNING_KEY:-}" ]; then
-            .build/release/WinnowCensus sign --key-env CENSUS_SIGNING_KEY census/peers.json
-            .build/release/WinnowCensus verify census/peers.json
-          else
-            echo "::warning::CENSUS_SIGNING_KEY is not set; census/peers.json is published unsigned"
-            rm -f census/peers.json.sig
-          fi
+          # Refuse to publish if the signing secret is missing or does not
+          # match the public key trusted by the wallet.
+          .build/release/WinnowCensus sign --key-env CENSUS_SIGNING_KEY census/peers.json
+          .build/release/WinnowCensus verify --public-key "$(cat census/signing-public-key.txt)" census/peers.json
           # Health is supplementary. Its pointer is replaced only after a
           # complete calculation; external mining availability cannot prevent
           # publication of an accepted peer census.

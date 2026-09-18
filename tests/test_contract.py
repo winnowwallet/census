@@ -99,6 +99,22 @@ class ContractTests(unittest.TestCase):
     def test_clearnet_still_keeps_the_fastest_duplicate(self):
         _, p = self.run_records([record('8.8.8.8', latency=50), record('::ffff:8.8.8.8', latency=5)])
         self.assertEqual([e['host'] for e in p['networks']['clearnet']], ['8.8.8.8'])
+    def test_committed_catalog_has_a_trusted_signature(self):
+        public = (ROOT / 'census/signing-public-key.txt').read_text().strip()
+        self.assertRegex(public, r'^[0-9a-f]{64}$')
+        peers = self.root / 'peers.json'
+        peers.write_bytes((ROOT / 'census/peers.json').read_bytes())
+        signature = peers.with_suffix('.json.sig')
+        signature.write_bytes((ROOT / 'census/peers.json.sig').read_bytes())
+        def verify():
+            return subprocess.run([str(BIN), 'verify', '--public-key', public, str(peers)], capture_output=True).returncode
+        self.assertEqual(verify(), 0)
+        peers.write_bytes(peers.read_bytes() + b'\n')
+        self.assertNotEqual(verify(), 0)
+        peers.write_bytes((ROOT / 'census/peers.json').read_bytes())
+        signature.unlink()
+        self.assertNotEqual(verify(), 0)
+
     def test_keygen_sign_and_verify(self):
         out = subprocess.run([str(BIN), 'keygen'], capture_output=True, check=True).stdout.decode()
         secret = re.search(r'CENSUS_SIGNING_KEY=(\S+)', out)[1]
