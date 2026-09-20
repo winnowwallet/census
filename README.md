@@ -36,7 +36,11 @@ numbers describe observed endpoints: handshake outcomes, advertised services, an
   The Worker's custom domain, census.winnowwallet.com, gets its DNS record and
   certificate from Cloudflare on deploy. Needs the `CF_API_TOKEN` and
   `CF_ACCOUNT_ID` secrets; see "Deploying" below.
-- `index.html` — the page.
+- `index.html` — the page structure and explanatory copy.
+- `assets/census.css` — shared page styles.
+- `assets/census.js` — daily census rendering.
+- `assets/explorer.js` — optional outcome/transport filters and dated endpoint history.
+- `health/index.html` and `assets/health.js` — the standalone network health page.
 - `census/` — one aggregate per day, plus the permanent `peers.json` (below).
   Other per-node detail is a two-week workflow artifact; btcnodes already
   publishes the per-IP view.
@@ -177,8 +181,9 @@ Nothing else is configured by hand: no DNS record, no Pages project.
 
 ## Publication contract and replay
 
-The census and wallet use `WalletCore.CensusCatalog` for address, schema, date,
-height and diversity validation. Tor v3 names include checksum/version validation;
+The census uses `WalletCore.CensusCatalog` for current clearnet address, schema,
+date, height and diversity validation. Its own `PublicationCatalog` preserves
+and validates Tor and I2P entries for publication. Tor v3 names include checksum/version validation;
 I2P b32 names are canonical 32-byte destinations. IPv4-mapped aliases and IPv6
 spellings are normalized before endpoint deduplication. The catalog is capped at
 2,000 entries per overlay; the clearnet catalog also requires port 8333 and one
@@ -226,3 +231,40 @@ Method references: [BTCNodes](https://btcnodes.io/),
 [Bitnod.es](https://www.bitnod.es/) (eight-day unresponsive retention),
 [21 Ninja methodology](https://21.ninja/reachable-nodes/methodology/), and
 [Coin Dance](https://coin.dance/nodes) (address deduplication).
+
+## Website development
+
+The dashboard is a static page with no frontend build step or dependencies.
+From the repository root, run `python3 -m http.server 8000` and open
+`http://localhost:8000`. Opening the HTML directly from disk will not load the
+JSON observations. Both deployment workflows copy `index.html`, `assets/`, `health/`, and
+`census/` into `site/`; keep these inputs together when previewing or deploying.
+
+The daily dashboard at `/` and experimental network health page at `/health/`
+load independently, so a missing health artifact cannot hide the census. Published JSON and signature
+files retain their existing URLs. Historical evidence lives in `comparison/`
+and `health-evidence/` and is not part of the website bundle.
+
+## Automatic wallet updates
+
+Before each daily run, `scripts/update-wallet` resolves wallet `main` to an
+exact commit and tries the release build, all offline contract tests, and the
+preserved comparison replay. Only a passing revision is used for the census.
+An incompatible candidate restores both package files; the workflow warns and
+rebuilds the previous tested revision so collection can continue. Successful
+package updates are committed with the accepted census data. The diagnostic
+artifact includes the update log and both package files for reproducibility.
+
+Run `scripts/update-wallet` locally to try the latest wallet revision. A failed
+attempt exits nonzero and restores the pin; run `swift build` afterward to
+rebuild the previous debug executable if needed. WalletCore provides optional SOCKS5 transport for the census; the GUI wallet
+continues to use direct TCP. Overlay catalog validation is maintained here,
+so wallet changes cannot silently discard Tor or I2P publication data.
+
+Click an outcome and transport on the census page to filter reported software
+and inspect endpoint history. The explorer downloads the existing compressed
+health history only on demand and lets readers select an accepted observation
+day. When that attempt has no user agent, the latest earlier report is explicitly
+counted as historical; missing reports remain Unknown. At most 100 endpoint
+rows are rendered; the linked download retains the complete history. The
+headline and outcome/transport totals remain the latest daily aggregate.

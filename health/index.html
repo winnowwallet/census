@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Network health — Winnow</title>
+    <meta
+      name="description"
+      content="Bitcoin endpoint consistency and estimated mining hashrate, with dated observations and reproducible evidence."
+    />
+    <link rel="stylesheet" href="../assets/census.css" />
+  </head>
+  <body>
+    <main class="census">
+      <header class="masthead">
+        <a class="brand" href="https://winnowwallet.com"><b>₿</b> WINNOW</a>
+        <nav aria-label="Network health">
+          <a href="../">Peer census</a
+          ><a href="https://winnowwallet.com">Wallet</a
+          ><a href="https://github.com/winnowwallet/census/blob/main/HEALTH.md"
+            >Method</a
+          >
+        </nav>
+      </header>
+      <div class="intro">
+        <p class="eyebrow">BITCOIN NETWORK OBSERVATIONS</p>
+        <h1>Network health</h1>
+        <p class="sub">
+          Explore endpoint consistency and estimated mining power over time.
+          Each measurement keeps its source and observation date.
+        </p>
+        <p class="note">
+          Experimental measurements. No overall health score is computed.
+        </p>
+      </div>
+      <noscript
+        ><p>
+          JavaScript is needed to display these observations.
+          <a href="../census/health.json">Download the health data</a> to
+          inspect the components and sources.
+        </p></noscript
+      >
+      <section aria-labelledby="health-heading">
+        <h2 id="health-heading">
+          Observed components <span class="badge">Experimental</span>
+        </h2>
+        <p class="reading">
+          These observations track whether the same endpoints keep answering
+          from day to day, what they advertise, and how the estimated hashrate
+          changes over time. Consistency needs several days of observations, so
+          it is reported only for endpoints attempted on at least three days.
+        </p>
+        <p id="health-status" class="note" role="status">
+          Loading health observations…
+        </p>
+        <div class="wrap">
+          <table id="health-components">
+            <thead>
+              <tr>
+                <th>Component</th>
+                <th>Observation</th>
+                <th>What it means</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div
+          class="plot"
+          tabindex="0"
+          aria-label="Scrollable estimated mining hashrate chart"
+        >
+          <svg
+            id="mining-trend"
+            viewBox="0 0 720 220"
+            role="img"
+            aria-label="Mempool estimated hashrate in exahashes per second; missing dates are gaps"
+          ></svg>
+        </div>
+        <p class="note">
+          Hashrate is estimated from the work in mined blocks and the time
+          between them, so short windows are noisy. Pool attribution says which
+          pool published a block, not who owns the hardware. No overall score is
+          computed yet.
+        </p>
+        <p>
+          <a href="../census/health.json">Health components and provenance</a> ·
+          <a id="health-nodes-link" hidden
+            >Per-endpoint observations (JSON.gz)</a
+          >
+          ·
+          <a href="https://github.com/winnowwallet/census/blob/main/HEALTH.md"
+            >Definitions and reproducible calculation</a
+          >
+          ·
+          <a href="https://mempool.space/docs/api/rest"
+            >Mining source methodology and API</a
+          >
+        </p>
+      </section>
+      <footer>
+        <a href="../">Peer census</a> ·
+        <a href="https://winnowwallet.com">Winnow wallet</a> ·
+        <a href="https://github.com/winnowwallet/census">Source and data</a>
+      </footer>
+    </main>
+    <script src="../assets/health.js" defer></script>
+  </body>
+</html>

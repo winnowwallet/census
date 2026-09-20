@@ -145,7 +145,7 @@ func parseHostPort(_ text: String) -> PeerEndpoint? {
     return PeerEndpoint(host: host, port: port)
 }
 
-enum OverlayNetwork: String {
+enum OverlayNetwork: String, CaseIterable {
     case clearnet, tor, i2p
 
     init(host: String) {
@@ -172,10 +172,10 @@ private func loadEndpoints(from url: URL, options: Options) throws -> [PeerEndpo
     for key in keys {
         let trimmed = key.trimmingCharacters(in: .whitespaces)
         guard let parsed = parseHostPort(trimmed) else { continue }
-        let overlay = parsed.overlay
+        let overlay = OverlayNetwork(host: parsed.host)
         if overlay == .tor, options.torSocks == nil { continue }
         if overlay == .i2p, options.i2pSocks == nil { continue }
-        guard let host = CensusCatalog.canonicalHost(parsed.host, overlay: overlay) else { continue }
+        guard let host = PublicationCatalog.canonicalHost(parsed.host, overlay: overlay) else { continue }
         let endpoint = PeerEndpoint(host: host, port: parsed.port)
         if seen.insert(endpoint).inserted { endpoints.append(endpoint) }
     }
@@ -517,18 +517,18 @@ func observationDate(_ records: [Record], options: Options) throws -> String {
         ?? (options.replay == nil && options.peerList == nil ? options.runStartedAt : "")
     guard let parsed = ISO8601DateFormatter().date(from: value),
           ISO8601DateFormatter().string(from: parsed) == value, parsed <= Date(),
-          CensusCatalog.day(String(value.prefix(10))) != nil else {
+          PublicationCatalog.day(String(value.prefix(10))) != nil else {
         throw NSError(domain: "Census", code: 1, userInfo: [NSLocalizedDescriptionKey:
             "Replay needs its original --observed-at YYYY-MM-DDTHH:MM:SSZ or records with a run timestamp"])
     }
     if let supplied = options.observedAt, !dates.isEmpty, dates != Set([supplied]) {
-        throw CensusCatalog.Invalid.date
+        throw PublicationCatalog.Invalid.date
     }
     for record in records {
         if let ended = record.observedAt {
             guard let end = ISO8601DateFormatter().date(from: ended),
                   ISO8601DateFormatter().string(from: end) == ended,
-                  end >= parsed, end <= Date() else { throw CensusCatalog.Invalid.date }
+                  end >= parsed, end <= Date() else { throw PublicationCatalog.Invalid.date }
         }
     }
     return value
@@ -543,7 +543,7 @@ if let command = CommandLine.arguments.dropFirst().first, ["keygen", "sign", "ve
 }
 let options = parseOptions()
 if let catalog = options.validatePeerList {
-    _ = try CensusCatalog.decode(Data(contentsOf: catalog), requireFresh: false)
+    _ = try PublicationCatalog.decode(Data(contentsOf: catalog), requireFresh: false)
     exit(0)
 }
 let records: [Record]

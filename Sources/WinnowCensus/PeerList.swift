@@ -2,12 +2,12 @@ import CryptoKit
 import Foundation
 import WalletCore
 
-typealias PeerList = CensusCatalog
-let peerListOverlayCap = CensusCatalog.overlayCap
+typealias PeerList = PublicationCatalog
+let peerListOverlayCap = PublicationCatalog.overlayCap
 
 func atTip(_ record: Record, tip: Int32) -> Bool {
     guard let height = record.startHeight else { return false }
-    return CensusCatalog.nearTip(height, tip: tip)
+    return PublicationCatalog.nearTip(height, tip: tip)
 }
 
 /// Where a candidate stands in the day's selection order. Clearnet keeps the
@@ -18,7 +18,7 @@ func atTip(_ record: Record, tip: Int32) -> Bool {
 /// responders, which one operator running many services on good hardware
 /// could otherwise fill (IR-004). The date keys the hash, so the same day
 /// replays to the same list and a different day samples differently.
-func selectionRank(_ entry: CensusCatalog.Entry, latencyMs: Int, overlay: WalletCore.OverlayNetwork,
+func selectionRank(_ entry: PublicationCatalog.Entry, latencyMs: Int, overlay: OverlayNetwork,
                    date: String) -> String {
     if overlay == .clearnet { return String(format: "%012d", latencyMs) }
     return SHA256.hash(data: Data("\(date)\u{0}\(entry.host)".utf8)).map { String(format: "%02x", $0) }.joined()
@@ -27,11 +27,11 @@ func selectionRank(_ entry: CensusCatalog.Entry, latencyMs: Int, overlay: Wallet
 /// Canonicalize before deduplication. Order by `selectionRank`, then enforce
 /// address diversity and overlay caps. Source dates are never rebuilt.
 func makePeerList(_ records: [Record], tip: Int32, date: String) throws -> PeerList {
-    var networks: [String: [CensusCatalog.Entry]] = ["clearnet": [], "tor": [], "i2p": []]
-    var candidates: [(CensusCatalog.Entry, Int, WalletCore.OverlayNetwork)] = []
+    var networks: [String: [PublicationCatalog.Entry]] = ["clearnet": [], "tor": [], "i2p": []]
+    var candidates: [(PublicationCatalog.Entry, Int, OverlayNetwork)] = []
     for record in records where record.outcome == "ok" && atTip(record, tip: tip) {
-        let overlay = WalletCore.OverlayNetwork(ofHost: record.host)
-        guard let host = CensusCatalog.canonicalHost(record.host, overlay: overlay),
+        let overlay = OverlayNetwork(host: record.host)
+        guard let host = PublicationCatalog.canonicalHost(record.host, overlay: overlay),
               let ua = record.userAgent, ua.utf8.count <= 256,
               !ua.unicodeScalars.contains(where: { $0.value < 32 || $0.value == 127 }),
               let height = record.startHeight, record.port > 0, record.latencyMs >= 0,
@@ -51,7 +51,7 @@ func makePeerList(_ records: [Record], tip: Int32, date: String) throws -> PeerL
         }
         networks[overlay.rawValue]!.append(entry)
     }
-    return try CensusCatalog(date: date, tip: tip, networks: networks).validated(requireFresh: false)
+    return try PublicationCatalog(date: date, tip: tip, networks: networks).validated(requireFresh: false)
 }
 
 func writePeerList(_ records: [Record], tip: Int32, observedAt: String, to url: URL) throws -> PeerList {

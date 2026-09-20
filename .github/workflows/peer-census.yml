@@ -67,6 +67,17 @@ jobs:
             -o snapshot.json "https://btcnodes.io/api/v1/snapshots/latest/"
           python3 -c 'import json; d=json.load(open("snapshot.json")); print(len(d["nodes"]), "reachable endpoints, tip", d.get("latest_height"))'
 
+      - name: Try latest wallet main
+        # A rejected update preserves the working pin; the existing build below
+        # rebuilds that revision before any network probes or publication.
+        run: |
+          if scripts/update-wallet 2>&1 | tee wallet-update.log; then
+            echo "Latest wallet main passed the release build and contracts"
+          else
+            echo "::warning::Latest wallet is incompatible; using the previous tested wallet pin"
+          fi
+          cat Package.resolved
+
       - name: Build
         # The wallet repo keeps its docs screenshots in Git LFS, and its LFS
         # objects do not resolve for SwiftPM's anonymous fetch. The census
@@ -173,7 +184,7 @@ jobs:
           fi
           git config user.name "winnow-census"
           git config user.email "census@users.noreply.github.com"
-          git add census
+          git add census Package.swift Package.resolved
           git diff --cached --quiet && exit 0
           git commit -q -m "census: $(date -u +%Y-%m-%d)"
           # main may have moved during the hour-long dial; replay the data
@@ -191,6 +202,8 @@ jobs:
         run: |
           rm -rf site && mkdir site
           cp index.html site/
+          cp -r assets site/assets
+          cp -r health site/health
           cp -r census site/census
 
       - name: Deploy the Worker
@@ -214,6 +227,9 @@ jobs:
             peers.json
             census.jsonl
             census-summary.txt
+            wallet-update.log
+            Package.swift
+            Package.resolved
             tor.log
             i2pd.log
           retention-days: 14
