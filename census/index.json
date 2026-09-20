@@ -1072,30 +1072,30 @@
       }
     },
     {
-      "behind": 451,
-      "coreUsable": 5499,
+      "behind": 466,
+      "coreUsable": 5845,
       "date": "2026-09-20",
-      "dialled": 25573,
+      "dialled": 26041,
       "families": {
         "Core": {
-          "atTip": 5493,
-          "behind": 6,
+          "atTip": 5838,
+          "behind": 7,
           "medianFeeFilterSatPerKvB": 100,
           "stuckAtSplit": 3,
-          "usable": 5499
+          "usable": 5845
         },
         "Knots": {
-          "atTip": 790,
-          "behind": 442,
+          "atTip": 827,
+          "behind": 456,
           "medianFeeFilterSatPerKvB": 1000,
-          "stuckAtSplit": 434,
-          "usable": 1411
+          "stuckAtSplit": 450,
+          "usable": 1468
         },
         "btcd": {
-          "atTip": 11,
+          "atTip": 10,
           "behind": 3,
           "stuckAtSplit": 0,
-          "usable": 14
+          "usable": 13
         },
         "other": {
           "atTip": 2,
@@ -1105,44 +1105,44 @@
           "usable": 2
         }
       },
-      "handshakeLatencyMsMedian": 6926,
-      "knotsStuck": 434,
-      "knotsUsable": 1411,
+      "handshakeLatencyMsMedian": 6319,
+      "knotsStuck": 450,
+      "knotsUsable": 1468,
       "medianFeeFilterSatPerKvB": 100,
       "networks": {
         "clearnet": {
-          "atTip": 1145,
+          "atTip": 1155,
           "behind": 67,
-          "dialled": 9085,
-          "noCompactFilters": 6430,
-          "stuckAtSplit": 61,
-          "usable": 1253
+          "dialled": 9084,
+          "noCompactFilters": 6394,
+          "stuckAtSplit": 60,
+          "usable": 1263
         },
         "i2p": {
-          "atTip": 2289,
-          "behind": 170,
-          "dialled": 4181,
-          "noCompactFilters": 1414,
-          "stuckAtSplit": 167,
-          "usable": 2517
+          "atTip": 2518,
+          "behind": 180,
+          "dialled": 4378,
+          "noCompactFilters": 1532,
+          "stuckAtSplit": 177,
+          "usable": 2761
         },
         "tor": {
-          "atTip": 2862,
-          "behind": 214,
-          "dialled": 12307,
-          "noCompactFilters": 6642,
-          "stuckAtSplit": 209,
-          "usable": 3156
+          "atTip": 3004,
+          "behind": 219,
+          "dialled": 12579,
+          "noCompactFilters": 7003,
+          "stuckAtSplit": 216,
+          "usable": 3304
         }
       },
-      "observedTip": 967812,
-      "stuckAtSplit": 437,
-      "usable": 6926,
+      "observedTip": 967819,
+      "stuckAtSplit": 453,
+      "usable": 7328,
       "wholeNetworkFamilies": {
-        "Core": 17612,
-        "Knots": 3680,
-        "btcd": 15,
-        "other": 105
+        "Core": 18305,
+        "Knots": 3834,
+        "btcd": 14,
+        "other": 104
       }
     }
   ]
