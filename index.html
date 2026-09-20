@@ -1,188 +1,297 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Winnow peer census</title>
-<meta name="description" content="Daily Bitcoin endpoint measurements: handshake outcomes, advertised compact-filter support, reported heights, overlay coverage and reproducible artifacts.">
-<style>
-  :root { color-scheme: dark; --paper:#0d1012; --ink:#e9e7df; --ink-2:#a9b0b1; --rule:#303638; --accent:#efa85e; --blue:#9fbdce; --red:#d88c77; --mono:ui-monospace,SFMono-Regular,Consolas,monospace; }
-  * { box-sizing:border-box; }
-  html { scroll-behavior:smooth; }
-  body { margin:0; background:var(--paper); color:var(--ink); font:1rem/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-  body::before { content:""; position:fixed; inset:0; pointer-events:none; z-index:-1; background-image:linear-gradient(#b5bec306 1px,transparent 1px),linear-gradient(90deg,#b5bec306 1px,transparent 1px); background-size:32px 32px; }
-  a { color:var(--accent); text-decoration-thickness:1px; text-underline-offset:.22em; }
-  a:hover { color:#fff1d6; }
-  :focus-visible { outline:2px solid var(--accent); outline-offset:5px; }
-  .census { max-width:76rem; margin:auto; padding:1.4rem clamp(1rem,4vw,3rem) 4rem; }
-  .masthead { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.6rem 0 1.2rem; border-bottom:1px solid var(--rule); font: .875rem var(--mono); }
-  .masthead .brand { color:var(--ink); text-decoration:none; letter-spacing:.12em; }
-  .brand b { color:var(--accent); }
-  nav { display:flex; gap:1.4rem; flex-wrap:wrap; }
-  .intro { display:grid; grid-template-columns:1fr auto; gap:2rem; align-items:center; padding:2rem 0 1rem; }
-  h1 { font:600 clamp(2rem,4.4vw,3.5rem)/1.08 var(--mono); letter-spacing:-.065em; margin:0 0 1rem; max-width:16ch; }
-  .sub { color:var(--ink-2); max-width:57ch; margin:0; }
-  .equation { margin:0; border-left:2px solid var(--accent); padding:.7rem 0 .7rem 1.3rem; color:var(--accent); }
-  .equation math { font-size:1.8rem; display:block; margin-bottom:.6rem; }
-  .equation figcaption { max-width:20ch; font:.8rem/1.5 var(--mono); color:var(--ink-2); }
-  #freshness { font:.875rem/1.6 var(--mono); color:var(--ink-2); margin:1rem 0; padding:.7rem 0; border-block:1px solid var(--rule); }
-  .tiles { display:grid; grid-template-columns:repeat(3,1fr); margin:0 0 2.5rem; border-bottom:1px solid var(--rule); }
-  .tile { padding:1.2rem 1rem 1.2rem 0; min-width:0; }
-  .tile:nth-child(3n+2),.tile:nth-child(3n+3) { border-left:1px solid var(--rule); padding-left:1.2rem; }
-  .tile:nth-child(n+4) { border-top:1px solid var(--rule); }
-  .tile .n { color:var(--accent); font:500 clamp(1.7rem,3vw,2.7rem)/1.2 var(--mono); font-variant-numeric:tabular-nums; margin-bottom:.45rem; }
-  .tile .l { color:var(--ink-2); font-size:.875rem; max-width:28ch; }
-  h2 { font:500 1.25rem/1.4 var(--mono); letter-spacing:-.03em; margin:2.6rem 0 1rem; }
-  h2 .index { color:var(--accent); font-size:.8rem; margin-right:.8rem; letter-spacing:0; }
-  h3 { font:500 1rem/1.5 var(--mono); }
-  table { border-collapse:collapse; width:100%; margin:0; font: .875rem/1.5 var(--mono); font-variant-numeric:tabular-nums; }
-  th,td { text-align:left; padding:.75rem .65rem; border-bottom:1px solid var(--rule); vertical-align:top; }
-  th { color:var(--ink-2); font-weight:400; }
-  tbody tr:hover { background:#efa85e08; }
-  td.num,th.num { text-align:right; }
-  .wrap { overflow-x:auto; margin-bottom:1.5rem; }
-  .plot { overflow-x:auto; border:1px solid var(--rule); padding:1rem .6rem 0; background:#0d1012bf; }
-  svg { width:100%; min-width:620px; height:auto; display:block; }
-  .note { color:var(--ink-2); font-size:.875rem; }
-  .legend { display:flex; flex-wrap:wrap; gap:.5rem 1.5rem; font:.8rem/1.6 var(--mono); }
-  .legend span::before { content:""; display:inline-block; width:1.2rem; height:2px; margin:0 .6rem .25rem 0; background:var(--blue); }
-  .legend span+span::before { background:var(--red); }
-  .reading { max-width:78ch; }
-  .reading p { margin:0 0 1rem; }
-  code,pre { font-family:var(--mono); font-size:.875em; }
-  pre { overflow:auto; padding:1.25rem; border:1px solid var(--rule); border-left:2px solid var(--accent); background:#080b0d; line-height:1.7; }
-  #artifacts { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(2,1fr); border-top:1px solid var(--rule); }
-  #artifacts li { border-bottom:1px solid var(--rule); padding:.9rem .8rem .9rem 0; font:.875rem/1.5 var(--mono); }
-  #provenance { overflow-wrap:anywhere; font-family:var(--mono); font-size:.75rem; }
-  .comparison { border-left:2px solid var(--accent); padding-left:1.3rem; }
-  footer { margin-top:3rem; padding-top:1rem; border-top:1px solid var(--rule); color:var(--ink-2); font:.8rem/1.6 var(--mono); }
-  @media(max-width:650px) { .intro { grid-template-columns:1fr; gap:1rem; } .equation { display:none; } h1 { max-width:none; } .masthead { align-items:flex-start; } nav { gap:.6rem 1rem; justify-content:flex-end; } .tiles { grid-template-columns:repeat(2,1fr); } .tile:nth-child(n) { padding:.9rem .75rem; border-left:0; border-top:1px solid var(--rule); } .tile:nth-child(2n) { border-left:1px solid var(--rule); } .tile:nth-child(-n+2) { border-top:0; } #artifacts { grid-template-columns:1fr; } }
-  @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
-  @media print { :root { --paper:white; --ink:black; --ink-2:#333; --rule:#bbb; --accent:#8a4300; } body::before { display:none; } .plot,pre { background:white; } }
-</style>
-</head>
-<body>
-<main class="census">
-<header class="masthead"><a class="brand" href="#"><b>₿</b> WINNOW / CENSUS</a><nav aria-label="Census"><a href="#measurements">Data</a><a href="#build">Run your own</a><a href="https://github.com/winnowwallet/census">Source</a></nav></header>
-<div class="intro"><div><h1>Bitcoin peer census</h1><p class="sub">Every day, each endpoint in the BTCNodes snapshot is dialled with the same handshake the Winnow wallet uses, and every outcome is recorded, failures included. The results become the wallet’s built-in peer list.</p></div><figure class="equation"><math xmlns="http://www.w3.org/1998/Math/MathML" aria-label="Filter handshake share equals filter handshakes divided by attempts"><mi>q</mi><mo>=</mo><mfrac><msub><mi>N</mi><mi>CF</mi></msub><msub><mi>N</mi><mi>attempts</mi></msub></mfrac></math><figcaption>The share of attempts that completed a handshake advertising compact filters.</figcaption></figure></div>
-<p id="freshness" role="status">Loading observations…</p>
-<div class="tiles" id="tiles"></div>
-<h2 id="measurements"><span class="index">01</span>Daily observations</h2>
-<div class="plot" tabindex="0" aria-label="Scrollable daily observation chart"><svg id="trend" viewBox="0 0 720 220" role="img" aria-label="Compact-filter handshake share over time; missing days are gaps"></svg></div>
-<div class="legend"><span>Filter handshakes / attempts</span><span>Split-height reports / filter handshakes</span></div><p class="note">Days without a successful run are left blank. Runs made under the earlier height policy keep their original artifacts.</p>
-<section aria-labelledby="health-heading">
-<h2 id="health-heading">Bitcoin health / experimental</h2>
-<p class="reading">This section tracks whether the same endpoints keep answering from day to day, what they advertise, and how the estimated hashrate changes over time. Consistency needs several days of observations, so it is reported only for endpoints attempted on at least three days.</p>
-<p id="health-status" class="note" role="status">Loading the health baseline…</p>
-<div class="wrap"><table id="health-components"><thead><tr><th>Component</th><th>Observation</th><th>What it means</th></tr></thead><tbody></tbody></table></div>
-<div class="plot" tabindex="0" aria-label="Scrollable estimated mining hashrate chart"><svg id="mining-trend" viewBox="0 0 720 220" role="img" aria-label="Mempool estimated hashrate in exahashes per second; missing dates are gaps"></svg></div>
-<p class="note">Hashrate is estimated from the work in mined blocks and the time between them, so short windows are noisy. Pool attribution says which pool published a block, not who owns the hardware. No overall score is computed yet.</p>
-<p><a href="census/health.json">Baseline components and provenance</a> · <a id="health-nodes-link" hidden>Per-endpoint observations (JSON.gz)</a> · <a href="https://github.com/winnowwallet/census/blob/main/HEALTH.md">Definitions and reproducible calculation</a> · <a href="https://mempool.space/docs/api/rest">Mining source methodology and API</a></p>
-</section>
-<h2><span class="index">02</span>What answered</h2>
-<div class="wrap"><table id="outcomes"><thead><tr><th>Outcome</th><th>Endpoints</th><th>Share of attempts</th></tr></thead><tbody></tbody></table></div>
-<div class="wrap"><table id="networks"><thead><tr><th>Transport</th><th>Attempts</th><th>Compact-filter handshake</th><th>Answered without filters</th><th>Near tip, of filter handshakes</th></tr></thead><tbody></tbody></table></div>
-<h2><span class="index">03</span>Reported software</h2>
-<p class="note">User agents are self-reported. The whole-network column counts every version response, with or without compact-filter support; the filter-handshake column is the subset that advertised filters, so its percentages are not comparable with another census’s whole-network figures.</p>
-<div class="wrap"><table id="families"><thead><tr><th>Family</th><th>All version responses</th><th>Filter handshakes</th><th>Near tip, of filter handshakes</th><th>Median fee filter</th></tr></thead><tbody></tbody></table></div>
-<h2 id="artifacts-heading"><span class="index">04</span>Download the data</h2>
-<ul id="artifacts"></ul>
-<p id="provenance" class="note"></p>
-<section class="reading comparison" aria-labelledby="comparison-heading"><h2 id="comparison-heading"><span class="index">05</span>Comparison with other censuses</h2><p>On 13 September 2026 the same 23,061 responding endpoints were compared with the BTCNodes input: 7,524 advertised compact filters here against 7,526 there, a difference of two. BTCNodes supplies the input list, so this checks consistency with the source rather than confirming the result independently.</p><p>Bitnod.es and Coin Dance count deduplicated addresses, and Bitnod.es also keeps addresses that answered recently but not on the day. The most recent 21 Ninja CSV available was from November 2025. These totals measure different things and are not compared directly.</p><p>Jonathan Bier, who maintains Bitnod.es, confirmed that it makes its own observations with the shared Bitnodes crawler. Its active count drops addresses last connected nine or more UTC days earlier, excludes I2P, and does not test filter responses, which accounts for several of the differences. <a href="https://github.com/winnowwallet/census/blob/main/comparison/bitnodes-methodology-2026-09-13.md">The permitted methodology clarification</a> and <a href="https://github.com/winnowwallet/census/tree/main/comparison/2026-09-13-bitnodes-export">public CSV overlap</a> are preserved.</p><p><a href="https://github.com/winnowwallet/census/tree/main/comparison/2026-09-13-full">Dated comparison, source snapshots and calculations</a> · <a href="https://github.com/winnowwallet/census/tree/main/comparison/2026-09-13-rechecks">The two discrepancies, rechecked</a></p></section>
-<section class="reading" id="build"><h2><span class="index">06</span>Run the census yourself</h2><p>The crawler is a small Swift command-line program that uses the wallet’s own connection code. It records version messages, service bits, reported heights and fee filters, and sends nothing about your wallet to anyone.</p><p>On macOS with Swift 6, the commands below run a small clearnet sample. Tor and I2P need their own SOCKS routers; the <a href="https://github.com/winnowwallet/census/blob/main/.github/workflows/peer-census.yml">full-run workflow</a> has the exact setup, concurrency and timeouts.</p><pre><code>git clone https://github.com/winnowwallet/census.git
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Winnow peer census</title>
+    <meta
+      name="description"
+      content="Daily Bitcoin endpoint measurements: handshake outcomes, advertised compact-filter support, reported heights, overlay coverage and reproducible artifacts."
+    />
+    <link rel="stylesheet" href="assets/census.css" />
+  </head>
+  <body>
+    <main class="census">
+      <header class="masthead">
+        <a class="brand" href="#"><b>₿</b> WINNOW / CENSUS</a>
+        <nav aria-label="Census">
+          <a href="health/">Network health</a><a href="#measurements">Data</a
+          ><a href="#artifacts-heading">Downloads</a><a href="#build">Method</a
+          ><a href="https://github.com/winnowwallet/census">Source</a>
+        </nav>
+      </header>
+      <div class="intro">
+        <p class="eyebrow">DAILY BITCOIN NETWORK OBSERVATIONS</p>
+        <h1>Which Bitcoin peers answer?</h1>
+        <p class="sub">
+          We connect to the endpoints in the BTCNodes snapshot using Winnow’s
+          handshake and record the results. See who answers, who advertises
+          compact filters, and which heights they report.
+        </p>
+        <p class="note">
+          One endpoint is one network address, not necessarily one distinct
+          node.
+        </p>
+      </div>
+      <p id="freshness" role="status">Loading observations…</p>
+      <noscript
+        ><p>
+          This dashboard needs JavaScript to display observations. You can still
+          <a href="census/index.json">download the daily index</a> or
+          <a href="census/peers.json">peer catalog</a>.
+        </p></noscript
+      >
+      <div class="tiles" id="tiles"></div>
+      <p id="run-context" class="note"></p>
+      <h2 id="measurements"><span class="index">01</span>Daily observations</h2>
+      <div
+        class="plot"
+        tabindex="0"
+        aria-label="Scrollable daily observation chart"
+      >
+        <svg
+          id="trend"
+          viewBox="0 0 720 220"
+          role="img"
+          aria-label="Compact-filter handshake share and split-height reports over time; missing days are gaps"
+        ></svg>
+      </div>
+      <div class="legend">
+        <span>Filter handshakes / attempts</span
+        ><span>Split-height reports / filter handshakes</span>
+      </div>
+      <p class="note">
+        Days without a successful run are left blank. Runs made under the
+        earlier height policy keep their original artifacts.
+      </p>
+
+      <section id="explorer" hidden aria-label="Endpoint filters">
+        <p id="explorer-status" role="status"></p>
+        <div id="explorer-chips"></div>
+        <label
+          >Observation day
+          <select id="explorer-date" disabled></select
+        ></label>
+        <button id="explorer-clear" type="button">Clear filters</button>
+        <a id="explorer-download" hidden
+          >Download complete endpoint history (JSON.gz)</a
+        >
+      </section>
+      <h2 id="outcomes-heading"><span class="index">02</span>What answered</h2>
+      <p class="note">
+        Select an outcome and transport to explore software and endpoint
+        history. Detail dates reflect accepted health observations.
+      </p>
+      <div class="wrap">
+        <table id="outcomes" aria-labelledby="outcomes-heading">
+          <thead>
+            <tr>
+              <th>Outcome</th>
+              <th class="num">Endpoints</th>
+              <th class="num">Share of attempts</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="wrap">
+        <table id="networks">
+          <caption>
+            By transport
+          </caption>
+          <thead>
+            <tr>
+              <th>Transport</th>
+              <th class="num">Attempts</th>
+              <th class="num">Advertised filters</th>
+              <th class="num">Answered without filters</th>
+              <th class="num">Near tip among filter peers</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <h2><span class="index">03</span>Reported software</h2>
+      <p class="note" id="software-note">
+        Software names come from self-reported user agents. “All version
+        responses” includes peers with and without compact-filter support.
+        Near-tip percentages use only the filter-handshake subset.
+      </p>
+      <div class="wrap">
+        <table id="families">
+          <thead>
+            <tr>
+              <th>Family</th>
+              <th class="num">All version responses</th>
+              <th class="num">Filter handshakes</th>
+              <th class="num">Near tip among filter peers</th>
+              <th class="num">Median fee filter</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <section id="endpoint-details" hidden>
+        <h2>Selected endpoints</h2>
+        <p id="endpoint-count" class="note"></p>
+        <div id="endpoint-list"></div>
+      </section>
+      <h2 id="artifacts-heading">
+        <span class="index">04</span>Download the data
+      </h2>
+      <ul id="artifacts"></ul>
+      <p id="provenance" class="note"></p>
+      <details class="reading background">
+        <summary>
+          Historical comparison with other censuses
+          <span>13 September 2026</span>
+        </summary>
+        <p>
+          On 13 September 2026 the same 23,061 responding endpoints were
+          compared with the BTCNodes input: 7,524 advertised compact filters
+          here against 7,526 there, a difference of two. BTCNodes supplies the
+          input list, so this checks consistency with the source rather than
+          confirming the result independently.
+        </p>
+        <p>
+          Bitnod.es and Coin Dance count deduplicated addresses, and Bitnod.es
+          also keeps addresses that answered recently but not on the day. The
+          most recent 21 Ninja CSV available was from November 2025. These
+          totals measure different things and are not compared directly.
+        </p>
+        <p>
+          Jonathan Bier, who maintains Bitnod.es, confirmed that it makes its
+          own observations with the shared Bitnodes crawler. Its active count
+          drops addresses last connected nine or more UTC days earlier, excludes
+          I2P, and does not test filter responses, which accounts for several of
+          the differences.
+          <a
+            href="https://github.com/winnowwallet/census/blob/main/comparison/bitnodes-methodology-2026-09-13.md"
+            >The permitted methodology clarification</a
+          >
+          and
+          <a
+            href="https://github.com/winnowwallet/census/tree/main/comparison/2026-09-13-bitnodes-export"
+            >public CSV overlap</a
+          >
+          are preserved.
+        </p>
+        <p>
+          <a
+            href="https://github.com/winnowwallet/census/tree/main/comparison/2026-09-13-full"
+            >Dated comparison, source snapshots and calculations</a
+          >
+          ·
+          <a
+            href="https://github.com/winnowwallet/census/tree/main/comparison/2026-09-13-rechecks"
+            >The two discrepancies, rechecked</a
+          >
+        </p>
+      </details>
+      <section class="reading" id="build">
+        <h2><span class="index">05</span>Run the census yourself</h2>
+        <p>
+          The crawler is a small Swift command-line program that uses the
+          wallet’s own connection code. It records version messages, service
+          bits, reported heights and fee filters, and sends nothing about your
+          wallet to anyone.
+        </p>
+        <p>
+          On macOS with Swift 6, the commands below run a small clearnet sample.
+          Tor and I2P need their own SOCKS routers; the
+          <a
+            href="https://github.com/winnowwallet/census/blob/main/.github/workflows/peer-census.yml"
+            >full-run workflow</a
+          >
+          has the exact setup, concurrency and timeouts.
+        </p>
+        <pre><code>git clone https://github.com/winnowwallet/census.git
 cd census
 swift build -c release --product WinnowCensus
 curl -fsSL https://btcnodes.io/api/v1/snapshots/latest/ -o snapshot.json
 .build/release/WinnowCensus --input snapshot.json --sample 32 \
-  --out diagnostic.jsonl --summary-json diagnostic-summary.json</code></pre><p>A sample is for checking the tooling and cannot be published in place of a full run. To repeat the cross-census calculation from the stored snapshots:</p><pre><code>python3 scripts/census_compare.py compare comparison/2026-09-13-full</code></pre><h3>Notes for a rerun</h3><p>A listening SOCKS port does not mean Tor has finished bootstrapping; the workflow waits for the bootstrap message before dialling. Observations are dated by the day they were made, and reprocessing them later does not refresh them. A timeout records one failed connection attempt from this observer, not that the endpoint is down. Probe duration includes the wait for the peer’s fee filter, so it is not a latency measurement.</p><p>Keep the input snapshot and the raw records with any change to the observer, so that a different result can be traced to the network, the timeout, or the code.</p></section>
-<section class="reading"><h2><span class="index">07</span>What the numbers mean</h2>
-<p>A successful handshake with <code>NODE_COMPACT_FILTERS</code> means the endpoint advertised compact-filter support. It does not prove that the endpoint returns valid filters; the wallet checks that on the peers it actually uses. A near-tip candidate reported a height within 100 blocks, in either direction, of the reference tip in the input snapshot. A reported height on its own does not identify which chain a peer follows.</p>
-<p>The counts are of endpoints, not of distinct machines or operators. One node can have several addresses, ports and transports, and several nodes can share one public address. The clearnet category combines IPv4 and IPv6; Tor and I2P are measured separately. CJDNS and invalid or private addresses are excluded. A timeout describes this observer’s connection attempt, not permanent unreachability.</p>
-<p>The downloadable catalog canonicalizes and deduplicates endpoints, applies public-address and network-prefix diversity rules to clearnet, validates overlay addresses, and retains at most 2,000 candidates per overlay. The wallet supports direct clearnet and opt-in Tor; I2P transport is deferred. A diagnostic sample, or a run whose Tor or I2P router was not healthy, is never published in place of production data. When a run fails, the previous good artifacts stay available with their original observation date.</p>
-<p>Probe duration is the elapsed time of a successful filter handshake, including proxy setup where used and the bounded wait for the peer’s fee-filter announcement, so it is not a round-trip latency. A fee filter is the peer’s announced relay threshold, not a fee recommendation or a confirmation estimate. The split-height count records heights 961,632–961,652 and does not by itself prove which chain a peer follows.</p>
-<p>See the <a href="https://github.com/winnowwallet/census">census source and reproducible comparisons</a>, <a href="https://github.com/winnowwallet/census/actions/workflows/peer-census.yml">full run logs and retained raw observations</a>, and <a href="https://winnowwallet.com">Winnow wallet</a>. BTCNodes is the input source, so agreement with its endpoint list is not independent confirmation.</p>
-</section><footer>Source and data: <a href="https://github.com/winnowwallet/census">winnowwallet/census</a>.</footer>
-</main>
-<script>
-(async () => {
-  const number = n => Number.isFinite(n) ? n.toLocaleString('en-US') : 'Unavailable';
-  const share = (n, d) => Number.isFinite(n) && d > 0 ? (100 * n / d).toFixed(1) + '%' : 'Unavailable';
-  const element = (tag, text) => { const e = document.createElement(tag); e.textContent = text; return e; };
-  const row = (id, values) => { const r = document.createElement('tr'); values.forEach((v,i) => {const cell=element('td',v); if(i)cell.className='num';r.append(cell);}); document.querySelector('#' + id + ' tbody').append(r); };
-  const get = async path => { const r = await fetch(path, {cache: 'no-store'}); if (!r.ok) throw Error('Artifact unavailable'); return r.json(); };
-  try {
-    const index = await get('census/index.json');
-    const days = index.days.filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d.date)).sort((a,b) => a.date.localeCompare(b.date));
-    if (!days.length) throw Error('No observations have been published.');
-    const last = days.at(-1), latest = await get('census/' + last.date + '.json');
-    const age = Math.max(0, Math.floor((Date.now() - Date.parse(latest.generatedAt)) / 86400000));
-    document.getElementById('freshness').textContent = 'Observation: ' + latest.generatedAt + (latest.observationEndedAt ? ' to ' + latest.observationEndedAt : ' (end time unavailable)') + '. ' + age + ' days old.' + (age > 7 ? ' Catalog too old for a wallet refresh.' : '') + (latest.completeRun !== true ? ' Historical artifact: full-run provenance was not recorded by this version.' : ' Accepted full run.');
-    const near = Object.values(latest.networks || {}).reduce((sum,n) => Number.isFinite(n.atTip) && Number.isFinite(sum) ? sum+n.atTip : NaN, 0);
-    const tiles = [[latest.dialled,'attempted endpoints'],[latest.usable,'successful filter handshakes'],[near,'near-tip filter handshakes before catalog limits'],[latest.observedTip,'reference height'],[latest.handshakeLatencyMsMedian,'median probe milliseconds'],[latest.medianFeeFilterSatPerKvB == null ? null : latest.medianFeeFilterSatPerKvB / 1000,'median announced fee filter (sat/vB)']];
-    for (const [n,label] of tiles) { const tile=element('div',''); tile.className='tile'; const count=element('div',number(n)); count.className='n'; const caption=element('div',label); caption.className='l'; tile.append(count,caption); document.getElementById('tiles').append(tile); }
-    for (const [name,n] of Object.entries(latest.outcomes || {}).sort()) row('outcomes',[name,number(n),share(n,latest.dialled)]);
-    for (const [name,n] of Object.entries(latest.networks || {}).sort()) row('networks',[name,number(n.dialled),number(n.usable)+' ('+share(n.usable,n.dialled)+')',number(n.noCompactFilters),share(n.atTip,n.usable)]);
-    const families = [...new Set([...Object.keys(latest.families || {}),...Object.keys(latest.wholeNetworkFamilies || {})])].sort();
-    for (const name of families) { const f=latest.families?.[name] || {}; row('families',[name,number(latest.wholeNetworkFamilies?.[name]),number(f.usable),share(f.atTip,f.usable),f.medianFeeFilterSatPerKvB == null ? 'Unavailable' : number(f.medianFeeFilterSatPerKvB/1000)+' sat/vB']); }
-    for (const [url,title] of [['census/'+last.date+'.json','Latest aggregate JSON'],['census/index.json','Daily index JSON'],['census/peers.json','Wallet candidate catalog JSON'],['https://github.com/winnowwallet/census/actions/workflows/peer-census.yml','Source snapshots, raw observations and run logs']]) { const a=element('a',title); a.href=url; const li=element('li','');li.append(a);document.getElementById('artifacts').append(li); }
-    document.getElementById('provenance').textContent='Input SHA-256: '+(latest.inputSHA256 || 'not recorded')+'. Processing revision: '+(latest.processingRevision || 'not recorded')+'. Processed at: '+(latest.processedAt || 'not recorded')+'.';
-    const svg=document.getElementById('trend'), ns='http://www.w3.org/2000/svg';
-    const add=(tag,attrs,text)=>{const e=document.createElementNS(ns,tag);for(const [k,v]of Object.entries(attrs))e.setAttribute(k,v);if(text)e.textContent=text;svg.append(e);};
-    const start=Date.parse(days[0].date), end=Date.parse(last.date), span=end-start || 86400000;
-    const x=d=>48+(Date.parse(d.date)-start)/span*655, y=v=>184-v*1.55;
-    for(let n=0;n<=100;n+=25){add('line',{x1:48,x2:703,y1:y(n),y2:y(n),stroke:'var(--rule)'});add('text',{x:42,y:y(n)+4,'text-anchor':'end',fill:'currentColor','font-size':13},n+'%');}
-    const series=[{color:'var(--blue)',value:d=>d.dialled>0 && Number.isFinite(d.usable)?100*d.usable/d.dialled:null},{color:'var(--red)',value:d=>d.usable>0 && Number.isFinite(d.stuckAtSplit)?100*d.stuckAtSplit/d.usable:null}];
-    for(const s of series){let previous=null;for(const d of days){const v=s.value(d);if(v==null){previous=null;continue;}if(previous && Date.parse(d.date)-Date.parse(previous.date)===86400000)add('line',{x1:x(previous),y1:y(s.value(previous)),x2:x(d),y2:y(v),stroke:s.color,'stroke-width':2});add('circle',{cx:x(d),cy:y(v),r:3,fill:s.color});previous=d;}}
-    days.forEach((d,i)=>{if(i%Math.max(1,Math.ceil(days.length/7))===0 || i===days.length-1)add('text',{x:x(d),y:210,fill:'currentColor','font-size':13,'text-anchor':'middle'},d.date.slice(5));});
-  } catch(error) { document.getElementById('freshness').textContent='Census data could not be loaded: '+error.message; }
-})();
-</script>
-<script>
-(async () => {
-  const status = document.getElementById('health-status');
-  try {
-    const response = await fetch('census/health.json');
-    if (!response.ok) throw new Error('baseline unavailable');
-    const health = await response.json();
-    if (health.schemaVersion !== 1) throw new Error('unknown baseline format');
-    const mining = health.mining;
-    status.textContent = 'Baseline evaluated '+health.asOf+'. Accepted census days: '+health.acceptedDays.join(', ')+'. Mining retrieved '+(mining.source?.retrievedAt || 'unavailable')+'. These are different observation windows.';
-    const rows = [
-      ['Endpoint consistency', (health.assessedNodeCount || 0).toLocaleString()+' / '+health.nodeCount.toLocaleString()+' endpoints assessed', 'At least three attempted days per endpoint in a rolling 30-day observed population. Missing attempts are not failures.'],
-      ['Reported services', 'Separate from consistency', 'Advertisements describe capabilities; they do not prove correct responses.'],
-      ['Estimated hashrate', Number.isFinite(mining.currentHashrateEHs) ? mining.currentHashrateEHs.toFixed(1)+' EH/s' : 'Unavailable', 'Source current estimate; exact averaging window unavailable.'],
-      ['Difficulty', Number.isFinite(mining.currentDifficulty) ? (mining.currentDifficulty/1e12).toFixed(2)+' trillion' : 'Unavailable', 'Proof-of-work difficulty reported by the mining source.'],
-      ['Pool concentration / block intervals', 'Unavailable', 'No preserved measurement in this baseline.'],
-      ['Overall Bitcoin health index', 'Not yet scored', 'Requires repeated observations and a published, tested composite model.']
-    ];
-    const body = document.querySelector('#health-components tbody');
-    if (/^health-nodes-[a-f0-9]{64}\.json\.gz$/.test(health.nodesArtifact?.file || '')) {
-      const link = document.getElementById('health-nodes-link');
-      link.href = 'census/' + health.nodesArtifact.file; link.hidden = false;
-    }
-    for (const row of rows) {
-      const tr = document.createElement('tr');
-      for (const value of row) { const td = document.createElement('td'); td.textContent=value; tr.append(td); }
-      body.append(tr);
-    }
-    const points = mining.hashrateSeries || [];
-    if (!points.length) return;
-    const svg = document.getElementById('mining-trend'), ns='http://www.w3.org/2000/svg';
-    const add=(tag,attrs,text)=>{const e=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(text)e.textContent=text;svg.append(e);};
-    const low=Math.floor(Math.min(...points.map(p=>p.hashrateEHs))/100)*100;
-    const high=Math.ceil(Math.max(...points.map(p=>p.hashrateEHs))/100)*100;
-    const first=points[0].timestamp,last=points[points.length-1].timestamp;
-    const x=p=>64+(p.timestamp-first)/(last-first || 86400)*625;
-    const y=v=>180-(v-low)/(high-low || 100)*155;
-    for (let i=0;i<=4;i++) { const value=low+(high-low)*i/4;add('line',{x1:64,x2:689,y1:y(value),y2:y(value),stroke:'var(--rule)'});add('text',{x:56,y:y(value)+4,'text-anchor':'end',fill:'currentColor','font-size':13},value.toFixed(0)); }
-    add('text',{x:64,y:16,fill:'currentColor','font-size':13},'Estimated EH/s');
-    points.forEach((p,i)=>{
-      if(i && p.timestamp-points[i-1].timestamp===86400) add('line',{x1:x(points[i-1]),y1:y(points[i-1].hashrateEHs),x2:x(p),y2:y(p.hashrateEHs),stroke:'var(--accent)','stroke-width':2});
-      add('circle',{cx:x(p),cy:y(p.hashrateEHs),r:2.5,fill:'var(--accent)'});
-      if(i%7===0 || i===points.length-1) add('text',{x:x(p),y:210,fill:'currentColor','font-size':13,'text-anchor':'middle'},new Date(p.timestamp*1000).toISOString().slice(5,10));
-    });
-  } catch(error) { status.textContent='Health baseline could not be loaded: '+error.message; }
-})();
-</script>
-</body>
+  --out diagnostic.jsonl --summary-json diagnostic-summary.json</code></pre>
+        <p>
+          A sample is for checking the tooling and cannot be published in place
+          of a full run. To repeat the cross-census calculation from the stored
+          snapshots:
+        </p>
+        <pre><code>python3 scripts/census_compare.py compare comparison/2026-09-13-full</code></pre>
+        <h3>Notes for a rerun</h3>
+        <p>
+          A listening SOCKS port does not mean Tor has finished bootstrapping;
+          the workflow waits for the bootstrap message before dialling.
+          Observations are dated by the day they were made, and reprocessing
+          them later does not refresh them. A timeout records one failed
+          connection attempt from this observer, not that the endpoint is down.
+          Probe duration includes the wait for the peer’s fee filter, so it is
+          not a latency measurement.
+        </p>
+        <p>
+          Keep the input snapshot and the raw records with any change to the
+          observer, so that a different result can be traced to the network, the
+          timeout, or the code.
+        </p>
+      </section>
+      <details class="reading background">
+        <summary>Definitions and measurement limits</summary>
+        <p>
+          A successful handshake with <code>NODE_COMPACT_FILTERS</code> means
+          the endpoint advertised compact-filter support. It does not prove that
+          the endpoint returns valid filters; the wallet checks that on the
+          peers it actually uses. A near-tip candidate reported a height within
+          100 blocks, in either direction, of the reference tip in the input
+          snapshot. A reported height on its own does not identify which chain a
+          peer follows.
+        </p>
+        <p>
+          The counts are of endpoints, not of distinct machines or operators.
+          One node can have several addresses, ports and transports, and several
+          nodes can share one public address. The clearnet category combines
+          IPv4 and IPv6; Tor and I2P are measured separately. CJDNS and invalid
+          or private addresses are excluded. A timeout describes this observer’s
+          connection attempt, not permanent unreachability.
+        </p>
+        <p>
+          The downloadable catalog canonicalizes and deduplicates endpoints,
+          applies public-address and network-prefix diversity rules to clearnet,
+          validates overlay addresses, and retains at most 2,000 candidates per
+          overlay. The GUI wallet uses direct clearnet. This census measures Tor
+          and I2P through external SOCKS proxies. A diagnostic sample, or a run
+          whose Tor or I2P router was not healthy, is never published in place
+          of production data. When a run fails, the previous good artifacts stay
+          available with their original observation date.
+        </p>
+        <p>
+          Probe duration is the elapsed time of a successful filter handshake,
+          including proxy setup where used and the bounded wait for the peer’s
+          fee-filter announcement, so it is not a round-trip latency. A fee
+          filter is the peer’s announced relay threshold, not a fee
+          recommendation or a confirmation estimate. The split-height count
+          records heights 961,632–961,652 and does not by itself prove which
+          chain a peer follows.
+        </p>
+        <p>
+          See the
+          <a href="https://github.com/winnowwallet/census"
+            >census source and reproducible comparisons</a
+          >,
+          <a
+            href="https://github.com/winnowwallet/census/actions/workflows/peer-census.yml"
+            >full run logs and retained raw observations</a
+          >, and <a href="https://winnowwallet.com">Winnow wallet</a>. BTCNodes
+          is the input source, so agreement with its endpoint list is not
+          independent confirmation.
+        </p>
+      </details>
+      <footer>
+        Source and data:
+        <a href="https://github.com/winnowwallet/census">winnowwallet/census</a
+        >.
+      </footer>
+    </main>
+    <script src="assets/census.js" defer></script>
+    <script src="assets/explorer.js" defer></script>
+  </body>
 </html>

@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["index.html", "census/**", "wrangler.jsonc", ".github/workflows/site.yml"]
+    paths: ["index.html", "assets/**", "health/**", "census/**", "wrangler.jsonc", ".github/workflows/site.yml"]
 
 permissions:
   contents: read
@@ -55,6 +55,8 @@ jobs:
         run: |
           rm -rf site && mkdir site
           cp index.html site/
+          cp -r assets site/assets
+          cp -r health site/health
           cp -r census site/census
 
       - name: Deploy the Worker

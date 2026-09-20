@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""Adopt wallet main only after the release build and offline contracts pass."""
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+WALLET = 'https://github.com/winnowwallet/winnow'
+PIN = re.compile(r'(\.package\(url: "https://github\.com/winnowwallet/winnow", revision: ")[0-9a-f]{40}("\))')
+
+
+def update(root=ROOT):
+    env = {**os.environ, 'GIT_LFS_SKIP_SMUDGE': '1',
+           'CENSUS_BINARY': str(root / '.build/release/WinnowCensus')}
+    def run(args, **kwargs):
+        return subprocess.run(args, cwd=root, env=env, check=True, **kwargs)
+
+    files = [root / 'Package.swift', root / 'Package.resolved']
+    originals = {p: p.read_bytes() if p.exists() else None for p in files}
+    manifest = files[0].read_text()
+    if len(PIN.findall(manifest)) != 1:
+        raise ValueError('Expected one explicit wallet revision pin')
+    output = run(['git', 'ls-remote', WALLET, 'refs/heads/main'],
+                 capture_output=True, text=True).stdout.strip().split()
+    if len(output) != 2 or output[1] != 'refs/heads/main' or not re.fullmatch(r'[0-9a-f]{40}', output[0]):
+        raise ValueError('Wallet main did not resolve to a commit')
+    revision = output[0]
+    print(f'Testing wallet main at {revision}', flush=True)
+    try:
+        files[0].write_text(PIN.sub(lambda m: m[1] + revision + m[2], manifest))
+        run(['swift', 'build', '-c', 'release', '--product', 'WinnowCensus'])
+        run([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-v'])
+        run([sys.executable, 'comparison/2026-09-14-publication-guard/reproduce.py', '--check'])
+    except BaseException:
+        for path, content in originals.items():
+            if content is None:
+                path.unlink(missing_ok=True)
+            else:
+                path.write_bytes(content)
+        print(f'Rejected wallet {revision}; restored the previous dependency pin.', flush=True)
+        raise
+    print(f'Accepted wallet {revision}; release build and offline contracts passed.', flush=True)
+
+
+if __name__ == '__main__':
+    try:
+        update()
+    except (subprocess.CalledProcessError, ValueError) as error:
+        print(f'Wallet update failed: {error}', file=sys.stderr)
+        sys.exit(1)
