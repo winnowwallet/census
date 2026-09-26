@@ -1,0 +1,82 @@
+{
+  "aheadOfTip" : 207,
+  "behind" : 419,
+  "completeRun" : true,
+  "dialled" : 25385,
+  "expectedRecords" : 25385,
+  "families" : {
+    "Core" : {
+      "atTip" : 5623,
+      "behind" : 6,
+      "medianFeeFilterSatPerKvB" : 100,
+      "stuckAtSplit" : 2,
+      "usable" : 5629
+    },
+    "Knots" : {
+      "atTip" : 747,
+      "behind" : 410,
+      "medianFeeFilterSatPerKvB" : 1000,
+      "stuckAtSplit" : 403,
+      "usable" : 1364
+    },
+    "btcd" : {
+      "atTip" : 11,
+      "behind" : 3,
+      "stuckAtSplit" : 0,
+      "usable" : 14
+    }
+  },
+  "generatedAt" : "2026-09-26T10:13:13Z",
+  "handshakeLatencyMsMedian" : 7203,
+  "inputSHA256" : "c0f757e0b2d02a7a1a95cd1708397ff0a19539f8e90a3ffa9557b1f55004c631",
+  "medianFeeFilterSatPerKvB" : 100,
+  "networks" : {
+    "clearnet" : {
+      "atTip" : 1124,
+      "behind" : 65,
+      "dialled" : 8621,
+      "noCompactFilters" : 6035,
+      "stuckAtSplit" : 56,
+      "usable" : 1236
+    },
+    "i2p" : {
+      "atTip" : 2401,
+      "behind" : 146,
+      "dialled" : 4344,
+      "noCompactFilters" : 1573,
+      "stuckAtSplit" : 144,
+      "usable" : 2621
+    },
+    "tor" : {
+      "atTip" : 2856,
+      "behind" : 208,
+      "dialled" : 12420,
+      "noCompactFilters" : 6594,
+      "stuckAtSplit" : 205,
+      "usable" : 3150
+    }
+  },
+  "observationEndedAt" : "2026-09-26T11:23:42Z",
+  "observedTip" : 968664,
+  "outcomes" : {
+    "noCompactFilters" : 14202,
+    "ok" : 7007,
+    "timeout" : 3944,
+    "unreachable" : 232
+  },
+  "peerListSHA256" : "5e6360eb2d03c544d63f98907ebcf0dc5486c77aea355767ea039863a63b5aca",
+  "processedAt" : "2026-09-26T11:23:47Z",
+  "processingRevision" : "03886e6602bdc8642561a20dc77f3e72a7934693",
+  "recordsSHA256" : "d6f9122c13790cdd9b8e4c286d65771cc2870b47a528f6306f1da3348ba2c1db",
+  "sample" : 0,
+  "splitHeight" : 961632,
+  "stuckAtSplit" : 405,
+  "usable" : 7007,
+  "wholeNetworkFamilies" : {
+    "Core" : 17444,
+    "Knots" : 3715,
+    "bcoin" : 1,
+    "btcd" : 15,
+    "other" : 34
+  }
+}
