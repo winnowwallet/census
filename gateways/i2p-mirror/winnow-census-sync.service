@@ -1,0 +1,7 @@
+[Unit]
+Description=Sync the signed Winnow census for the I2P mirror
+Wants=network-online.target
+After=network-online.target
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/winnow-census-sync

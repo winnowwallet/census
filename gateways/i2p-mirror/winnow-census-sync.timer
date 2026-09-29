@@ -1,0 +1,8 @@
+[Unit]
+Description=Sync the Winnow census mirror every 30 minutes
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=30min
+RandomizedDelaySec=2min
+[Install]
+WantedBy=timers.target

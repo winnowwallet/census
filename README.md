@@ -42,6 +42,8 @@ numbers describe observed endpoints: handshake outcomes, advertised services, an
 - `assets/census.js` — daily census rendering.
 - `assets/explorer.js` — optional outcome/transport filters and dated endpoint history.
 - `health/index.html` and `assets/health.js` — the standalone network health page.
+- `gateways/` — the reproducible Tor and I2P gateway VMs the wallet's
+  Automatic routing discovers on the tailnet ([guide](gateways/README.md)).
 - `census/` — one aggregate per day, plus the permanent `peers.json` (below).
   Other per-node detail is a two-week workflow artifact; btcnodes already
   publishes the per-IP view.

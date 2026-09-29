@@ -1,0 +1,11 @@
+#!/bin/bash
+# The wallet verifies the signature; the mirror only copies both files together.
+set -euo pipefail
+dir=/var/lib/winnow-census-mirror/census; tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+base=https://census.winnowwallet.com/census
+curl -fsS --max-time 120 --max-filesize 4194304 -o "$tmp/peers.json" "$base/peers.json"
+curl -fsS --max-time 60 --max-filesize 65536 -o "$tmp/peers.json.sig" "$base/peers.json.sig"
+python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$tmp/peers.json"
+chmod 644 "$tmp"/*
+mv "$tmp/peers.json.sig" "$dir/peers.json.sig.new"; mv "$tmp/peers.json" "$dir/peers.json.new"
+mv "$dir/peers.json.new" "$dir/peers.json"; mv "$dir/peers.json.sig.new" "$dir/peers.json.sig"
