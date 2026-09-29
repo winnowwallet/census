@@ -150,13 +150,22 @@ jobs:
         env:
           SAMPLE: ${{ inputs.sample || '0' }}
         run: |
-          TIP=$(python3 -c 'import json; print(json.load(open("snapshot.json")).get("latest_height", 0))')
+          # Heights are judged against the median that usable peers report.
+          # The snapshot's latest_height is only a cross-check: on 2026-09-29 it
+          # lagged the chain by more than 100 blocks, every honest peer looked
+          # "ahead", and publication was refused for an empty overlay.
+          SNAPSHOT_TIP=$(python3 -c 'import json; print(json.load(open("snapshot.json")).get("latest_height", 0))')
           SAMPLE_FLAG=""; [ "$SAMPLE" = "0" ] || SAMPLE_FLAG="--sample $SAMPLE"
-          echo "tip $TIP; sample ${SAMPLE}; fd limit $(ulimit -n); $(tor --version | head -n 1)"
+          echo "snapshot tip $SNAPSHOT_TIP; sample ${SAMPLE}; fd limit $(ulimit -n); $(tor --version | head -n 1)"
           .build/release/WinnowCensus --input snapshot.json --parallel 128 --tor-parallel 48 --i2p-parallel 64 \
             --timeout 8 --hidden-timeout 30 \
-            --tip "$TIP" --tor-socks 127.0.0.1:9050 --i2p-socks 127.0.0.1:4447 $SAMPLE_FLAG \
+            --tor-socks 127.0.0.1:9050 --i2p-socks 127.0.0.1:4447 $SAMPLE_FLAG \
             --out census.jsonl --summary-json summary.json | tee census-summary.txt
+          OBSERVED_TIP=$(python3 -c 'import json; print(json.load(open("summary.json"))["observedTip"])')
+          GAP=$(( OBSERVED_TIP > SNAPSHOT_TIP ? OBSERVED_TIP - SNAPSHOT_TIP : SNAPSHOT_TIP - OBSERVED_TIP ))
+          if [ "$SNAPSHOT_TIP" -gt 0 ] && [ "$GAP" -gt 100 ]; then
+            echo "::warning::snapshot tip $SNAPSHOT_TIP is $GAP blocks from the peers' median $OBSERVED_TIP; heights are judged by the median"
+          fi
           pgrep -x tor > /dev/null && echo "tor: still running" || echo "::warning::the tor process is gone"
           pgrep -x i2pd > /dev/null && echo "i2pd: still running" || echo "::warning::the i2pd process is gone"
           cp "$RUNNER_TEMP/tor.log" tor.log 2>/dev/null || true
