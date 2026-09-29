@@ -41,20 +41,52 @@ attestation. Neither gateway advertises or accepts routes; they are SOCKS5
 proxies, not exit nodes, and applications must use them explicitly with
 remote DNS.
 
-## The I2P census mirror (not in this recipe)
+## The I2P census mirror
 
 `CensusCatalog.i2pMirror` in the wallet
 (`yts2d2oyrsz2eytnofuutgnsixymdkj2nmcmmpfv3aofzsnjt4eq.b32.i2p`) is served
-from the I2P VM, which copies the signed `census/` files from
-census.winnowwallet.com every 30 minutes. It was added by hand after
-provisioning: the provisioned i2pd configuration has no application
-tunnels, and the server tunnel, sync job and HTTP server are not captured
-here yet.
+from the I2P VM. It was added on 2026-09-28, after provisioning, so it is not
+part of cloud-init; the files in [`i2p-mirror/`](i2p-mirror) are copied
+byte-for-byte from the running guest:
 
-The mirror's `.b32.i2p` address is compiled into the wallet. Rebuilding the
-I2P VM from this recipe alone loses the destination's private keys and so
-that address; back them up from the guest before any rebuild. The mirror
-itself is untrusted: the wallet verifies the census signature.
+| File | Guest path | Role |
+| --- | --- | --- |
+| `winnow-census-mirror.conf` | `/etc/i2pd/gateway-tunnels.d/` | i2pd HTTP server tunnel: I2P port 80 → `127.0.0.1:8480`, keys `winnow-census-mirror.dat` |
+| `winnow-census-http.service` | `/etc/systemd/system/` | `python3 -m http.server` on loopback 8480 serving `/var/lib/winnow-census-mirror`, sandboxed with `DynamicUser` |
+| `winnow-census-sync` | `/usr/local/bin/` | Fetches `peers.json` and `peers.json.sig` from census.winnowwallet.com with size and time limits, checks the JSON parses, then moves both into place |
+| `winnow-census-sync.service`, `.timer` | `/etc/systemd/system/` | Runs the sync a minute after boot and every 30 minutes |
+
+The mirror is untrusted: the wallet verifies the census signature, and the
+sync script copies files without checking it. It replaces `peers.json` just
+before `peers.json.sig`, so a fetch in that instant can pair a new list with
+the old signature; the wallet then rejects it and retries later.
+
+**Back up the destination keys.** The `.b32.i2p` address is compiled into the
+wallet and is derived from `/var/lib/i2pd/winnow-census-mirror.dat`
+(`i2pd:i2pd`, mode 0640). Rebuilding the I2P VM without that file gives the
+mirror a new address and breaks I2P-only census downloads until a wallet
+release carries it. Keep a copy in your secret store, never in this
+repository.
+
+To add the mirror to a freshly provisioned I2P VM, restore the keys first so
+i2pd reuses the address, then install and start the pieces:
+
+```sh
+# on the I2P guest, with this directory copied to ~/i2p-mirror
+sudo install -o i2pd -g i2pd -m 0640 winnow-census-mirror.dat /var/lib/i2pd/
+sudo install -m 0644 ~/i2p-mirror/winnow-census-mirror.conf /etc/i2pd/gateway-tunnels.d/
+sudo install -m 0755 ~/i2p-mirror/winnow-census-sync /usr/local/bin/
+sudo install -m 0644 ~/i2p-mirror/winnow-census-*.service ~/i2p-mirror/winnow-census-sync.timer /etc/systemd/system/
+sudo mkdir -p /var/lib/winnow-census-mirror/census
+sudo systemctl daemon-reload
+sudo systemctl enable --now winnow-census-http winnow-census-sync.timer
+sudo systemctl start winnow-census-sync
+sudo systemctl restart i2pd
+```
+
+Both guests also run [`winnow-tailscale-ssh.service`](winnow-tailscale-ssh.service),
+which waits for tailscaled and runs `tailscale set --ssh`; whether Tailscale
+SSH is allowed is then up to the tailnet policy.
 
 ## Reproduce
 

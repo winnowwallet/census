@@ -1,0 +1,13 @@
+[Unit]
+Description=Serve the Winnow census mirror on loopback for i2pd
+After=network.target
+[Service]
+DynamicUser=yes
+ExecStart=/usr/bin/python3 -m http.server 8480 --bind 127.0.0.1 --directory /var/lib/winnow-census-mirror
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target

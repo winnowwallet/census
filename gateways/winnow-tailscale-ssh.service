@@ -1,0 +1,9 @@
+[Unit]
+Description=Enable Tailscale SSH
+After=tailscaled.service network-online.target
+Wants=tailscaled.service network-online.target
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'for i in $(seq 60); do /usr/bin/tailscale status >/dev/null 2>&1 && break; sleep 2; done; /usr/bin/tailscale set --ssh'
+[Install]
+WantedBy=multi-user.target
