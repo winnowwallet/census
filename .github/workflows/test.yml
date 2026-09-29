@@ -15,7 +15,7 @@ jobs:
       run:
         shell: bash --noprofile --norc -e -o pipefail {0}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Build Swift contract and census
         env:
           GIT_LFS_SKIP_SMUDGE: '1'
@@ -24,7 +24,7 @@ jobs:
         run: python3 -m unittest discover -s tests -v 2>&1 | tee tests.log
       - name: Reproduce rejected-run comparison from preserved evidence
         run: python3 comparison/2026-09-14-publication-guard/reproduce.py --check 2>&1 | tee comparison-report.log
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: census-contract-${{ github.run_id }}
