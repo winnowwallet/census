@@ -51,7 +51,7 @@ struct Options: Sendable {
     var hiddenTimeout: Duration = .seconds(25)
     /// The chain tip to judge heights against. Default: the median of what
     /// usable peers report, which one liar in either direction cannot move.
-    /// The snapshot's own latest_height is a good value to pass.
+    /// The daily run uses that default: a snapshot's latest_height can lag.
     var tip: Int32?
     /// Summarise an earlier run's JSON lines instead of dialling: re-files a
     /// day under a changed rule without touching the network.

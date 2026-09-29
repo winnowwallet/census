@@ -23,7 +23,8 @@ numbers describe observed endpoints: handshake outcomes, advertised services, an
   each overlay on its own queue with its own ceiling (`--parallel`,
   `--tor-parallel`, `--i2p-parallel`): a Tor client saturates, rather than
   queues, past a few dozen concurrent rendezvous. `--peer-list` turns a run's
-  JSON lines into `census/peers.json`, the wallet's fallback-peer list (below).
+  JSON lines into `census/peers.json`, the signed candidate list the wallet
+  downloads (below).
 - `scripts/census-publish` — files a run's summary under `census/<date>.json`
   and rebuilds `census/index.json`.
 - `scripts/census-tables` — Markdown tables from a run's JSON lines, for a
@@ -47,8 +48,9 @@ numbers describe observed endpoints: handshake outcomes, advertised services, an
 
 ## The peer list (`census/peers.json`)
 
-The one per-node artifact kept permanently. Each run derives a validated candidate list from the day's JSON lines, and the wallet repo consumes it
-at release time to render its bundled fallback peers:
+The one per-node artifact kept permanently. Each run derives a validated candidate list from the day's JSON lines.
+The wallet downloads it, signed, from census.winnowwallet.com, or from its I2P
+mirror when routing is I2P-only; no peer list is bundled in the app:
 
 ```sh
 WinnowCensus --peer-list census.jsonl --tip HEIGHT --out census/peers.json
@@ -90,7 +92,6 @@ swift run -c release WinnowCensus --input snapshot.json --sample 3000 --out cens
 # with local routers: brew install tor i2pd, then
 swift run -c release WinnowCensus --input snapshot.json \
     --tor-socks 127.0.0.1:9050 --i2p-socks 127.0.0.1:4447 \
-    --tip "$(python3 -c 'import json;print(json.load(open("snapshot.json"))["latest_height"])')" \
     --out census.jsonl --summary-json summary.json
 scripts/census-tables census.jsonl
 ```
@@ -104,12 +105,13 @@ The census does not estimate unique physical nodes; even multiple clearnet
 addresses can belong to one node.
 
 **Heights are claims.** A `version.startHeight` is whatever the peer says. The
-tool judges peers against the snapshot's `latest_height` (or the median of
-what usable peers report) rather than any top percentile, because nodes on
-other chains claim heights well above Bitcoin's. "Behind" and "ahead" both
-use a 100-block margin: the snapshot ages a dozen blocks over an hour-long
-dial, so honest peers end a few blocks above it, while another chain's nodes
-sit thousands above.
+tool judges peers against the median height that usable peers report (or a
+`--tip` override) rather than any top percentile, because nodes on other
+chains claim heights well above Bitcoin's. "Behind" and "ahead" both use a
+100-block margin; another chain's nodes sit thousands above. The daily run
+logs the snapshot's `latest_height` only as a cross-check and warns when it
+is more than 100 blocks from the median: on 2026-09-29 a stale snapshot tip
+made every honest peer look ahead, and publication was refused.
 
 **Days can be re-filed.** `WinnowCensus --replay census.jsonl --tip N
 --summary-json day.json` rebuilds a day's summary from the run's JSON lines
