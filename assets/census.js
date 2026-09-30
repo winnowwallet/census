@@ -82,7 +82,7 @@
       (latest.medianFeeFilterSatPerKvB == null
         ? "Unavailable"
         : number(latest.medianFeeFilterSatPerKvB / 1000) + " sat/vB") +
-      ". Near-tip counts are before catalog limits.";
+      ". Near-tip counts are before the clearnet one-per-netblock rule.";
     for (const [n, label] of tiles) {
       const tile = element("div", "");
       tile.className = "tile";
@@ -234,11 +234,12 @@
         previous = d;
       }
     }
+    const step = Math.max(1, Math.ceil(days.length / 7)),
+      lastX = x(last);
     days.forEach((d, i) => {
-      if (
-        i % Math.max(1, Math.ceil(days.length / 7)) === 0 ||
-        i === days.length - 1
-      )
+      // The final date is always labelled; a regular tick that would print
+      // over it is dropped.
+      if (i === days.length - 1 || (i % step === 0 && lastX - x(d) >= 48))
         add(
           "text",
           {
