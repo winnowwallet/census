@@ -14,7 +14,6 @@ struct PublicationCatalog: Codable, Equatable, Sendable {
         self.schemaVersion = schemaVersion; self.date = date; self.tip = tip; self.networks = networks
     }
     static let maximumBytes = 4 * 1_024 * 1_024
-    static let overlayCap = 2_000
 
     enum Invalid: String, Error, LocalizedError {
         case schema, date, expired, future, size, endpoint, height, duplicate, diversity
@@ -43,7 +42,9 @@ struct PublicationCatalog: Codable, Equatable, Sendable {
 
     private func validatedEntries(_ overlay: OverlayNetwork) throws -> [Entry] {
         let entries = networks[overlay.rawValue] ?? []
-        guard entries.count <= Self.overlayCap else { throw Invalid.size }
+        // Every verified overlay peer is published; only the wallet's bound
+        // on any list applies.
+        guard entries.count <= WalletCore.CensusCatalog.maximumEntries else { throw Invalid.size }
         var seen = Set<PeerEndpoint>()
         let canonical = try entries.map { input in
             let entry = try validatedEntry(input, overlay: overlay)

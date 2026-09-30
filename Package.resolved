@@ -1,5 +1,5 @@
 {
-  "originHash" : "54a528413a2199ba14f8e3e06a4b7fc37586bdbd1dcfaaf285813064a502896c",
+  "originHash" : "3df1d18bccce45b5fd9ecd4001594f57a73e75a89c05f1f7336bf764c365ffbf",
   "pins" : [
     {
       "identity" : "swift-secp256k1",
@@ -15,7 +15,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/winnowwallet/winnow",
       "state" : {
-        "revision" : "b0d0b6185491e37f026c002cb7093ef43c03873f"
+        "revision" : "822d84856d424be02bacd5d38a595f3e8141b373"
       }
     }
   ],
