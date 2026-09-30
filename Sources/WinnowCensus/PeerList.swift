@@ -3,7 +3,6 @@ import Foundation
 import WalletCore
 
 typealias PeerList = PublicationCatalog
-let peerListOverlayCap = PublicationCatalog.overlayCap
 
 func atTip(_ record: Record, tip: Int32) -> Bool {
     guard let height = record.startHeight else { return false }
@@ -12,12 +11,10 @@ func atTip(_ record: Record, tip: Int32) -> Bool {
 
 /// Where a candidate stands in the day's selection order. Clearnet keeps the
 /// fastest duplicate and the netblock rule limits any one operator. Onion
-/// and I2P addresses have no netblock, so they are ordered by a per-day hash
-/// of the address instead of by latency: the overlay cap then takes a sample
-/// of the day's reachable hidden services rather than the 2,000 fastest
-/// responders, which one operator running many services on good hardware
-/// could otherwise fill (IR-004). The date keys the hash, so the same day
-/// replays to the same list and a different day samples differently.
+/// and I2P lists are not capped, so every verified service is published and
+/// the order only decides which duplicate endpoint is kept; a per-day hash of
+/// the address keeps that choice independent of latency (IR-004) and
+/// reproducible for the day.
 func selectionRank(_ entry: PublicationCatalog.Entry, latencyMs: Int, overlay: OverlayNetwork,
                    date: String) -> String {
     if overlay == .clearnet { return String(format: "%012d", latencyMs) }
@@ -45,7 +42,7 @@ func makePeerList(_ records: [Record], tip: Int32, date: String) throws -> PeerL
         ($0.rank, $0.entry.host, $0.entry.port, $0.entry.userAgent, $0.entry.startHeight) <
         ($1.rank, $1.entry.host, $1.entry.port, $1.entry.userAgent, $1.entry.startHeight)
     }) {
-        guard networks[overlay.rawValue]!.count < peerListOverlayCap, seen.insert(entry.endpoint).inserted else { continue }
+        guard seen.insert(entry.endpoint).inserted else { continue }
         if overlay == .clearnet {
             guard let block = entry.endpoint.netblock, blocks.insert(block).inserted else { continue }
         }
@@ -58,6 +55,10 @@ func writePeerList(_ records: [Record], tip: Int32, observedAt: String, to url: 
     let list = try makePeerList(records, tip: tip, date: String(observedAt.prefix(10)))
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-    try encoder.encode(list).write(to: url, options: .atomic)
+    let data = try encoder.encode(list)
+    // The wallet refuses a larger download; failing here keeps the last good
+    // published list instead of replacing it with one no wallet accepts.
+    guard data.count <= PublicationCatalog.maximumBytes else { throw PublicationCatalog.Invalid.size }
+    try data.write(to: url, options: .atomic)
     return list
 }

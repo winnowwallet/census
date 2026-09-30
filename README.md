@@ -79,9 +79,10 @@ blocks of the reference tip in either direction. A height outside that tolerance
 - **clearnet** satisfies the wallet's PeerPolicyTests invariants: public IP
   literals only (no hostnames), port 8333, at most one entry per IPv4 /16
   (IPv6 /32) netblock.
-- **tor** / **i2p** keep their hostnames and any port, and are capped at
-  2,000 entries per overlay — when a run yields more, the survivors are the
-  lowest elapsed probe duration (including proxy setup and the bounded fee-filter wait).
+- **tor** / **i2p** keep their hostnames and any port, and list every
+  verified service; there is no per-overlay cap. The file must stay within
+  the wallet's 4 MB and 65,536-entry bounds, or publication fails and the
+  last good list stays up.
 
 The per-node JSON lines stay a 14-day workflow artifact; this file is the
 carve-out, a product for the wallet rather than a census view.
@@ -160,10 +161,9 @@ and publish a matching signed list together. Remove the old wallet key only
 after supported wallet versions trust the replacement. Never commit the
 private key or include it in logs.
 
-Onion and I2P entries are sampled by a per-day hash of the address rather than
-taken in latency order, so the overlay cap is a sample of the day's reachable
-hidden services, not the fastest 2,000 responders (which one operator running
-many services could fill). Clearnet keeps the fastest duplicate and one entry
+Onion and I2P entries are not capped: every hidden service that answered at
+the tip with compact filters is published, so no latency ranking decides
+which ones a wallet sees. Clearnet keeps the fastest duplicate and one entry
 per netblock, as before.
 
 ## Deploying
@@ -189,8 +189,8 @@ The census uses `WalletCore.CensusCatalog` for current clearnet address, schema,
 date, height and diversity validation. Its own `PublicationCatalog` preserves
 and validates Tor and I2P entries for publication. Tor v3 names include checksum/version validation;
 I2P b32 names are canonical 32-byte destinations. IPv4-mapped aliases and IPv6
-spellings are normalized before endpoint deduplication. The catalog is capped at
-2,000 entries per overlay; the clearnet catalog also requires port 8333 and one
+spellings are normalized before endpoint deduplication. Overlays are not capped
+beyond the wallet's list bounds; the clearnet catalog also requires port 8333 and one
 address per IPv4 /16 or IPv6 /32.
 
 `--summary-json` writes its aggregate and a sibling `peers.json` from the same

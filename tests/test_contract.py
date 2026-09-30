@@ -83,16 +83,10 @@ class ContractTests(unittest.TestCase):
         before = (self.root / 'peers.json').read_bytes()
         self.run_records(list(reversed(rows)))
         self.assertEqual(before, (self.root / 'peers.json').read_bytes())
-    def test_overlay_cap(self):
-        _, p = self.run_records([record(onion(n)) for n in range(2005)])
-        self.assertEqual(len(p['networks']['tor']), 2000)
-    def test_hidden_overlays_are_sampled_by_hash_not_latency(self):
-        rows = [record(onion(n), latency=n) for n in range(2100)]
+    def test_every_verified_overlay_peer_is_published(self):
+        rows = [record(onion(n), latency=n) for n in range(3500)]
         _, p = self.run_records(rows)
-        chosen = {e['host'] for e in p['networks']['tor']}
-        self.assertEqual(len(chosen), 2000)
-        slowest = {onion(n) for n in range(2000, 2100)}
-        self.assertTrue(chosen & slowest, 'selection is not the 2,000 fastest responders')
+        self.assertEqual({e['host'] for e in p['networks']['tor']}, {onion(n) for n in range(3500)})
         first = (self.root / 'peers.json').read_bytes()
         self.run_records(list(reversed(rows)))
         self.assertEqual(first, (self.root / 'peers.json').read_bytes(), 'the same day replays to the same list')
