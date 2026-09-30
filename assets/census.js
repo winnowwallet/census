@@ -247,7 +247,8 @@
             y: 210,
             fill: "currentColor",
             "font-size": 13,
-            "text-anchor": "middle",
+            // Centred, the final date runs past the chart's right edge.
+            "text-anchor": i === days.length - 1 ? "end" : "middle",
           },
           d.date.slice(5),
         );
