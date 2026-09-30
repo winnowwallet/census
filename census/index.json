@@ -1807,24 +1807,24 @@
       }
     },
     {
-      "behind": 409,
-      "coreUsable": 5998,
+      "behind": 372,
+      "coreUsable": 5773,
       "date": "2026-09-30",
-      "dialled": 25794,
+      "dialled": 25394,
       "families": {
         "Core": {
-          "atTip": 5992,
-          "behind": 6,
+          "atTip": 5768,
+          "behind": 5,
           "medianFeeFilterSatPerKvB": 100,
-          "stuckAtSplit": 3,
-          "usable": 5998
+          "stuckAtSplit": 2,
+          "usable": 5773
         },
         "Knots": {
-          "atTip": 825,
-          "behind": 400,
+          "atTip": 806,
+          "behind": 364,
           "medianFeeFilterSatPerKvB": 1000,
-          "stuckAtSplit": 393,
-          "usable": 1425
+          "stuckAtSplit": 356,
+          "usable": 1361
         },
         "btcd": {
           "atTip": 11,
@@ -1840,44 +1840,44 @@
           "usable": 2
         }
       },
-      "handshakeLatencyMsMedian": 6418,
-      "knotsStuck": 393,
-      "knotsUsable": 1425,
+      "handshakeLatencyMsMedian": 6416,
+      "knotsStuck": 356,
+      "knotsUsable": 1361,
       "medianFeeFilterSatPerKvB": 100,
       "networks": {
         "clearnet": {
-          "atTip": 1084,
-          "behind": 58,
-          "dialled": 8716,
-          "noCompactFilters": 5878,
-          "stuckAtSplit": 51,
-          "usable": 1187
+          "atTip": 1109,
+          "behind": 55,
+          "dialled": 8548,
+          "noCompactFilters": 6009,
+          "stuckAtSplit": 48,
+          "usable": 1212
         },
         "i2p": {
-          "atTip": 2453,
-          "behind": 130,
-          "dialled": 4445,
-          "noCompactFilters": 1559,
+          "atTip": 2490,
+          "behind": 131,
+          "dialled": 4389,
+          "noCompactFilters": 1595,
           "stuckAtSplit": 127,
-          "usable": 2649
+          "usable": 2681
         },
         "tor": {
-          "atTip": 3293,
-          "behind": 221,
-          "dialled": 12633,
-          "noCompactFilters": 7346,
-          "stuckAtSplit": 218,
-          "usable": 3603
+          "atTip": 2988,
+          "behind": 186,
+          "dialled": 12457,
+          "noCompactFilters": 6805,
+          "stuckAtSplit": 183,
+          "usable": 3257
         }
       },
-      "observedTip": 969231,
-      "stuckAtSplit": 396,
-      "usable": 7439,
+      "observedTip": 969300,
+      "stuckAtSplit": 358,
+      "usable": 7150,
       "wholeNetworkFamilies": {
-        "Core": 18353,
-        "Knots": 3812,
+        "Core": 17777,
+        "Knots": 3724,
         "btcd": 15,
-        "other": 42
+        "other": 43
       }
     }
   ]
