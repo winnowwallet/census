@@ -2102,6 +2102,81 @@
         "btcd": 15,
         "other": 39
       }
+    },
+    {
+      "behind": 341,
+      "coreUsable": 5598,
+      "date": "2026-10-04",
+      "dialled": 25422,
+      "families": {
+        "Core": {
+          "atTip": 5590,
+          "behind": 8,
+          "medianFeeFilterSatPerKvB": 100,
+          "stuckAtSplit": 3,
+          "usable": 5598
+        },
+        "Knots": {
+          "atTip": 780,
+          "behind": 330,
+          "medianFeeFilterSatPerKvB": 1000,
+          "stuckAtSplit": 325,
+          "usable": 1292
+        },
+        "btcd": {
+          "atTip": 11,
+          "behind": 3,
+          "stuckAtSplit": 0,
+          "usable": 14
+        },
+        "other": {
+          "atTip": 2,
+          "behind": 0,
+          "medianFeeFilterSatPerKvB": 100,
+          "stuckAtSplit": 0,
+          "usable": 2
+        }
+      },
+      "handshakeLatencyMsMedian": 8008,
+      "knotsStuck": 325,
+      "knotsUsable": 1292,
+      "medianFeeFilterSatPerKvB": 100,
+      "networks": {
+        "clearnet": {
+          "atTip": 1123,
+          "behind": 51,
+          "dialled": 8854,
+          "noCompactFilters": 6330,
+          "stuckAtSplit": 45,
+          "usable": 1221
+        },
+        "i2p": {
+          "atTip": 2277,
+          "behind": 105,
+          "dialled": 4179,
+          "noCompactFilters": 1426,
+          "stuckAtSplit": 102,
+          "usable": 2438
+        },
+        "tor": {
+          "atTip": 2983,
+          "behind": 185,
+          "dialled": 12389,
+          "noCompactFilters": 6824,
+          "stuckAtSplit": 181,
+          "usable": 3247
+        }
+      },
+      "observedTip": 969835,
+      "stuckAtSplit": 328,
+      "usable": 6906,
+      "wholeNetworkFamilies": {
+        "Core": 17876,
+        "Knots": 3551,
+        "bcoin": 1,
+        "btcd": 15,
+        "other": 43
+      }
     }
   ]
 }
