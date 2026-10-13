@@ -543,7 +543,7 @@ if let command = CommandLine.arguments.dropFirst().first, ["keygen", "sign", "ve
 }
 let options = parseOptions()
 if let catalog = options.validatePeerList {
-    _ = try PublicationCatalog.decode(Data(contentsOf: catalog), requireFresh: false)
+    _ = try PublicationCatalog.decode(Data(contentsOf: catalog))
     exit(0)
 }
 let records: [Record]
