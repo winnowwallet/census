@@ -16,22 +16,22 @@ struct PublicationCatalog: Codable, Equatable, Sendable {
     static let maximumBytes = 4 * 1_024 * 1_024
 
     enum Invalid: String, Error, LocalizedError {
-        case schema, date, expired, future, size, endpoint, height, duplicate, diversity
+        case schema, date, size, endpoint, height, duplicate, diversity
         var errorDescription: String? { "Invalid census peer list: \(rawValue)." }
     }
 
     static func day(_ text: String) -> Int? { WalletCore.CensusCatalog.day(text) }
 
-    static func decode(_ data: Data, now: Date = Date(), requireFresh: Bool = true) throws -> Self {
+    static func decode(_ data: Data) throws -> Self {
         guard data.count <= maximumBytes else { throw Invalid.size }
-        return try JSONDecoder().decode(Self.self, from: data).validated(now: now, requireFresh: requireFresh)
+        return try JSONDecoder().decode(Self.self, from: data).validated()
     }
 
-    func validated(now: Date = Date(), requireFresh: Bool = true) throws -> Self {
+    func validated() throws -> Self {
         guard schemaVersion == 1, Set(networks.keys) == Set(["clearnet", "tor", "i2p"]) else { throw Invalid.schema }
         // Keep the consumer's current clearnet validation authoritative.
         let clearnet = try WalletCore.CensusCatalog(schemaVersion: schemaVersion, date: date,
-            tip: tip, networks: networks).validated(now: now, requireFresh: requireFresh)
+            tip: tip, networks: networks).validated()
         var result = self
         result.networks["clearnet"] = clearnet.networks["clearnet"]
         for overlay in [OverlayNetwork.tor, .i2p] {

@@ -48,7 +48,7 @@ func makePeerList(_ records: [Record], tip: Int32, date: String) throws -> PeerL
         }
         networks[overlay.rawValue]!.append(entry)
     }
-    return try PublicationCatalog(date: date, tip: tip, networks: networks).validated(requireFresh: false)
+    return try PublicationCatalog(date: date, tip: tip, networks: networks).validated()
 }
 
 func writePeerList(_ records: [Record], tip: Int32, observedAt: String, to url: URL) throws -> PeerList {
