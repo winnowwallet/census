@@ -36,7 +36,7 @@ only a tailnet IPv4 address that answers a SOCKS5 greeting:
 Tags are for tailnet administration; the wallet never reads them. A
 replacement must enroll with the same hostnames, and the tailnet ACLs must
 allow clients TCP 9050/4447 to them. The current deployment's addresses are
-`100.110.238.104` (Tor) and `100.101.121.117` (I2P); both are tagged devices,
+`100.93.53.12` (Tor) and `100.95.15.75` (I2P); both are tagged devices,
 so their keys do not expire.
 
 An auth key can apply a tag only if the tag has an owner in the tailnet
@@ -168,8 +168,8 @@ compact-filter service bit, with a current peer from
 `https://census.winnowwallet.com/census/peers.json`. It sends no wallet data.
 
 ```sh
-python3 check-peer.py 100.110.238.104 9050 PEER.onion 8333
-python3 check-peer.py 100.101.121.117 4447 PEER.b32.i2p 8333
+python3 check-peer.py 100.93.53.12 9050 PEER.onion 8333
+python3 check-peer.py 100.95.15.75 4447 PEER.b32.i2p 8333
 ```
 
 From a Mac on the tailnet, winnow's `scripts/check-live-gateways` exercises
