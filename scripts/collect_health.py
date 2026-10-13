@@ -44,7 +44,7 @@ def select_days(candidates, now):
     return [(s, r) for _, s, r in sorted(selected.values(), key=lambda v: v[1]['generatedAt'])]
 
 
-def collect(root, summary, raw, now, offline=False):
+def collect(root, summary, raw, now, offline=False, clock=lambda: dt.datetime.now(UTC)):
     start, _ = accepted(summary, raw, now)
     archive = root / 'health-evidence' / 'runs' / (start.date().isoformat() + '-' + summary['recordsSHA256'])
     if not archive.exists():
@@ -74,7 +74,7 @@ def collect(root, summary, raw, now, offline=False):
                 success = False
             capture_status = 'captured' if success else 'unavailable; bounded retrieval failed'
             if success:
-                captured = dt.datetime.now(UTC).replace(microsecond=0)
+                captured = clock().replace(microsecond=0)
                 content = read(target)
                 digest = hashlib.sha256(content).hexdigest()
                 meta = dict(schemaVersion=1, url=url, retrievedAt=captured.strftime('%Y-%m-%dT%H:%M:%SZ'),

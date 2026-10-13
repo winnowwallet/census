@@ -138,7 +138,7 @@ class HealthTests(unittest.TestCase):
                 return type('Result', (), {'returncode': 0})()
 
             with patch('collect_health.subprocess.run', side_effect=invalid_response):
-                collect(root, *run(), self.now)
+                collect(root, *run(), self.now, clock=lambda: self.now)
             report = json.loads((root / 'census/health.json').read_text())
             self.assertEqual(report['nodeCount'], 3)
             self.assertEqual(report['mining']['source'], metadata)
