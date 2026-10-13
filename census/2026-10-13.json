@@ -1,0 +1,88 @@
+{
+  "aheadOfTip" : 179,
+  "behind" : 275,
+  "completeRun" : true,
+  "dialled" : 24700,
+  "expectedRecords" : 24700,
+  "families" : {
+    "Core" : {
+      "atTip" : 5133,
+      "behind" : 7,
+      "medianFeeFilterSatPerKvB" : 100,
+      "stuckAtSplit" : 1,
+      "usable" : 5140
+    },
+    "Knots" : {
+      "atTip" : 706,
+      "behind" : 265,
+      "medianFeeFilterSatPerKvB" : 1000,
+      "stuckAtSplit" : 260,
+      "usable" : 1150
+    },
+    "btcd" : {
+      "atTip" : 10,
+      "behind" : 3,
+      "stuckAtSplit" : 0,
+      "usable" : 13
+    },
+    "other" : {
+      "atTip" : 2,
+      "behind" : 0,
+      "medianFeeFilterSatPerKvB" : 100,
+      "stuckAtSplit" : 0,
+      "usable" : 2
+    }
+  },
+  "generatedAt" : "2026-10-13T13:04:07Z",
+  "handshakeLatencyMsMedian" : 5910,
+  "inputSHA256" : "4f0719904731c42036b7ccbe06f0aa751c6f2e92ddbe5cd64ae3e1b1c1cf4b87",
+  "medianFeeFilterSatPerKvB" : 100,
+  "networks" : {
+    "clearnet" : {
+      "atTip" : 1099,
+      "behind" : 46,
+      "dialled" : 8811,
+      "noCompactFilters" : 6277,
+      "stuckAtSplit" : 39,
+      "usable" : 1191
+    },
+    "i2p" : {
+      "atTip" : 2425,
+      "behind" : 105,
+      "dialled" : 4372,
+      "noCompactFilters" : 1632,
+      "stuckAtSplit" : 104,
+      "usable" : 2600
+    },
+    "tor" : {
+      "atTip" : 2327,
+      "behind" : 124,
+      "dialled" : 11517,
+      "noCompactFilters" : 5121,
+      "stuckAtSplit" : 118,
+      "usable" : 2514
+    }
+  },
+  "observationEndedAt" : "2026-10-13T14:20:09Z",
+  "observedTip" : 971246,
+  "outcomes" : {
+    "noCompactFilters" : 13030,
+    "ok" : 6305,
+    "timeout" : 5113,
+    "unreachable" : 252
+  },
+  "peerListSHA256" : "ec0dd8e969c52530c443beb5e0b0efbad0405472fcbe961e58f93b49e05e3f86",
+  "processedAt" : "2026-10-13T14:20:14Z",
+  "processingRevision" : "5fe73a9c83a7565a33ee1d1fa57ee8b5c2089288",
+  "recordsSHA256" : "aaf51650fe3353454845c0e8f3bade5a317e88a9d358f19769b5b92eb8a72158",
+  "sample" : 0,
+  "splitHeight" : 961632,
+  "stuckAtSplit" : 261,
+  "usable" : 6305,
+  "wholeNetworkFamilies" : {
+    "Core" : 16078,
+    "Knots" : 3201,
+    "btcd" : 14,
+    "other" : 42
+  }
+}
