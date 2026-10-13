@@ -2,9 +2,8 @@
 import PackageDescription
 
 // The census dials with Winnow's own PeerConnection, consumed here as an
-// ordinary package dependency. The rebuilt wallet (winnowwallet/winnow) folds
-// the old BitcoinCore/BitcoinP2P products into one WalletCore library, with
-// the SOCKS5 proxy support on main.
+// ordinary package dependency: WalletCore from the wallet's main branch.
+// Package.resolved is not committed, so every build resolves the newest main.
 let package = Package(
     name: "winnow-census",
     platforms: [.macOS(.v14)],
@@ -12,7 +11,7 @@ let package = Package(
         .executable(name: "WinnowCensus", targets: ["WinnowCensus"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/winnowwallet/winnow", revision: "ce136cc51562cffbedb0a53cbb1c864391fad05a"),
+        .package(url: "https://github.com/winnowwallet/winnow", branch: "main"),
     ],
     targets: [
         .executableTarget(

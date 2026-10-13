@@ -67,24 +67,24 @@ jobs:
             -o snapshot.json "https://btcnodes.io/api/v1/snapshots/latest/"
           python3 -c 'import json; d=json.load(open("snapshot.json")); print(len(d["nodes"]), "reachable endpoints, tip", d.get("latest_height"))'
 
-      - name: Try latest wallet main
-        # A rejected update preserves the working pin; the existing build below
-        # rebuilds that revision before any network probes or publication.
-        run: |
-          if scripts/update-wallet 2>&1 | tee wallet-update.log; then
-            echo "Latest wallet main passed the release build and contracts"
-          else
-            echo "::warning::Latest wallet is incompatible; using the previous tested wallet pin"
-          fi
-          cat Package.resolved
-
       - name: Build
         # The wallet repo keeps its docs screenshots in Git LFS, and its LFS
         # objects do not resolve for SwiftPM's anonymous fetch. The census
         # builds only WalletCore, so skip the smudge filter entirely.
         env:
           GIT_LFS_SKIP_SMUDGE: "1"
-        run: swift build -c release --product WinnowCensus
+        run: |
+          swift build -c release --product WinnowCensus
+          cat Package.resolved
+
+      - name: Contract tests against today's wallet
+        # The wallet comes fresh from main on every run, so the offline
+        # contracts and the preserved comparison replay gate publication.
+        env:
+          CENSUS_BINARY: .build/release/WinnowCensus
+        run: |
+          python3 -m unittest discover -s tests
+          python3 comparison/2026-09-14-publication-guard/reproduce.py --check
 
       - name: Start Tor and an I2P router
         # Throwaway data directories under the runner's temp: nothing here
@@ -193,7 +193,7 @@ jobs:
           fi
           git config user.name "winnow-census"
           git config user.email "census@users.noreply.github.com"
-          git add census Package.swift Package.resolved
+          git add census
           git diff --cached --quiet && exit 0
           git commit -q -m "census: $(date -u +%Y-%m-%d)"
           # main may have moved during the hour-long dial; replay the data
@@ -236,7 +236,6 @@ jobs:
             peers.json
             census.jsonl
             census-summary.txt
-            wallet-update.log
             Package.swift
             Package.resolved
             tor.log

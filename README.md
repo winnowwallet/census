@@ -249,19 +249,15 @@ load independently, so a missing health artifact cannot hide the census. Publish
 files retain their existing URLs. Historical evidence lives in `comparison/`
 and `health-evidence/` and is not part of the website bundle.
 
-## Automatic wallet updates
+## The wallet it dials with
 
-Before each daily run, `scripts/update-wallet` resolves wallet `main` to an
-exact commit and tries the release build, all offline contract tests, and the
-preserved comparison replay. Only a passing revision is used for the census.
-An incompatible candidate restores both package files; the workflow warns and
-rebuilds the previous tested revision so collection can continue. Successful
-package updates are committed with the accepted census data. The diagnostic
-artifact includes the update log and both package files for reproducibility.
-
-Run `scripts/update-wallet` locally to try the latest wallet revision. A failed
-attempt exits nonzero and restores the pin; run `swift build` afterward to
-rebuild the previous debug executable if needed. WalletCore provides optional SOCKS5 transport for the census; the GUI wallet
+`Package.swift` names the wallet's `main` branch and `Package.resolved` is not
+committed, so a fresh checkout, including every daily run, resolves the newest
+WalletCore; `swift package update` moves an existing checkout. The daily run
+builds it, then runs the offline contract tests and the preserved
+comparison replay; if either fails, nothing is published that day. The run's
+artifact keeps the resolved `Package.resolved`, which names the exact wallet
+commit that dialled. WalletCore provides optional SOCKS5 transport for the census; the GUI wallet
 continues to use direct TCP. Overlay catalog validation is maintained here,
 so wallet changes cannot silently discard Tor or I2P publication data.
 
