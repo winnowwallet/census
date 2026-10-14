@@ -101,8 +101,9 @@
       }
       windowBody.append(tr);
     }
-    if (!windowBody.children.length)
-      document.getElementById("window-census").parentElement.hidden = true;
+    // Shown only once health.json carries the window census.
+    document.getElementById("window-section").hidden =
+      !windowBody.children.length;
     const points = mining.hashrateSeries || [];
     if (!points.length) {
       document.getElementById("mining-trend").parentElement.hidden = true;

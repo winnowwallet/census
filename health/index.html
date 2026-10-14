@@ -65,29 +65,31 @@
             <tbody></tbody>
           </table>
         </div>
-        <h3 id="window-heading">Over the 30-day window</h3>
-        <p class="reading">
-          A single day's census catches each endpoint at one moment, so a node
-          that misses one dial drops out of that day. Here an endpoint counts
-          under each state it showed on at least half of the days it was
-          attempted, over every version response, whether or not it advertises
-          compact filters. That is why the split and ahead counts are larger
-          than the daily census's, which count usable peers only.
-        </p>
-        <div class="wrap">
-          <table id="window-census" aria-labelledby="window-heading">
-            <thead>
-              <tr>
-                <th>Network</th>
-                <th>Assessed</th>
-                <th>Answered</th>
-                <th>Near the tip</th>
-                <th>At the BIP-110 split</th>
-                <th>Over 100 blocks ahead</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <div id="window-section" hidden>
+          <h3 id="window-heading">Over the 30-day window</h3>
+          <p class="reading">
+            A single day's census catches each endpoint at one moment, so a node
+            that misses one dial drops out of that day. Here an endpoint counts
+            under each state it showed on at least half of the days it was
+            attempted, over every version response, whether or not it advertises
+            compact filters. That is why the split and ahead counts are larger
+            than the daily census's, which count usable peers only.
+          </p>
+          <div class="wrap">
+            <table id="window-census" aria-labelledby="window-heading">
+              <thead>
+                <tr>
+                  <th>Network</th>
+                  <th>Assessed</th>
+                  <th>Answered</th>
+                  <th>Near the tip</th>
+                  <th>At the BIP-110 split</th>
+                  <th>Over 100 blocks ahead</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
         <div
           class="plot"
