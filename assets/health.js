@@ -78,6 +78,31 @@
       }
       body.append(tr);
     }
+    const windowCensus = health.windowCensus || {};
+    const windowBody = document.querySelector("#window-census tbody");
+    for (const network of ["clearnet", "tor", "i2p"]) {
+      const c = windowCensus[network];
+      if (!c) continue;
+      const tr = document.createElement("tr");
+      const share = (n) =>
+        n.toLocaleString() +
+        (c.assessed ? " (" + Math.round((100 * n) / c.assessed) + "%)" : "");
+      for (const value of [
+        network === "i2p" ? "I2P" : network === "tor" ? "Tor" : "Clearnet",
+        c.assessed.toLocaleString(),
+        share(c.answered),
+        share(c.nearTip),
+        share(c.atSplit),
+        share(c.aheadOfTip),
+      ]) {
+        const td = document.createElement("td");
+        td.textContent = value;
+        tr.append(td);
+      }
+      windowBody.append(tr);
+    }
+    if (!windowBody.children.length)
+      document.getElementById("window-census").parentElement.hidden = true;
     const points = mining.hashrateSeries || [];
     if (!points.length) {
       document.getElementById("mining-trend").parentElement.hidden = true;

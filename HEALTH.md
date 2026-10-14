@@ -24,6 +24,16 @@ days. Always show numerator, denominator, dates, coverage, and the raw daily
 results alongside it. Three days is a publication threshold, not a statistical
 confidence guarantee. Do not describe this ratio as uptime or node honesty.
 
+The **window census** counts the same population by majority of attempted days
+rather than by one day's dial. An endpoint attempted on at least three days counts
+under each state it showed on at least half of them: a version response, a height
+within 100 blocks of that run's tip, a height within 20 blocks above the BIP-110
+split, or a height over 100 blocks above the tip. One lost dial does not remove an
+endpoint and one answer does not add it. These count every version response, so
+the split and ahead counts are not the daily census's counts among usable peers.
+Every run is dialled at roughly the same hour, so a node that keeps daily hours is
+seen the same way each day; this is not a measure of time-of-day availability.
+
 Capabilities are separate: compact filters, witness, full or limited block
 service, and protocol version where recorded. An old version string alone does
 not lower consistency. A node without compact filters is less useful to this
