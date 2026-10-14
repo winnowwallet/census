@@ -168,6 +168,12 @@ jobs:
           fi
           pgrep -x tor > /dev/null && echo "tor: still running" || echo "::warning::the tor process is gone"
           pgrep -x i2pd > /dev/null && echo "i2pd: still running" || echo "::warning::the i2pd process is gone"
+          # Which guards carried the dial, and how their circuits fared: Tor
+          # keeps both in its state file and a clean stop flushes it. On
+          # 2026-10-14 one guard took the Tor rate to 8.6%; same-day runs on
+          # other guards ranged 55-76%.
+          pkill -TERM -x tor 2>/dev/null && sleep 3 || true
+          grep -E '^(TorVersion|Guard) ' "$RUNNER_TEMP/tor/state" > tor-state.txt 2>/dev/null || true
           cp "$RUNNER_TEMP/tor.log" tor.log 2>/dev/null || true
           cp "$RUNNER_TEMP/i2pd.log" i2pd.log 2>/dev/null || true
           echo "tor warnings and errors:"
@@ -226,10 +232,12 @@ jobs:
           command: deploy
 
       - name: Keep the per-node detail for two weeks
+        # A rerun (census-retry.yml) shares the run's id; its artifact takes
+        # the attempt number so the failed attempt's logs are kept beside it.
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: peer-census-${{ github.run_id }}
+          name: peer-census-${{ github.run_id }}${{ github.run_attempt != '1' && format('-{0}', github.run_attempt) || '' }}
           path: |
             snapshot.json
             summary.json
@@ -239,5 +247,6 @@ jobs:
             Package.swift
             Package.resolved
             tor.log
+            tor-state.txt
             i2pd.log
           retention-days: 14

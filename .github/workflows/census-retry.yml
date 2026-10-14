@@ -1,0 +1,48 @@
+name: Census retry
+
+# Reruns a scheduled census once when Tor would not come up or publication was
+# refused. Every run starts Tor afresh with a guard of its own, and on
+# 2026-10-14 the scheduled run's guard completed 0 of 151 circuits: the Tor
+# handshake rate fell to 8.6%, publication was refused, and a manual rerun that
+# afternoon was accepted at 54.8%. A rerun is a complete new run under every
+# publication check. Failed endpoints are never redialled and merged in, which
+# would give them a second chance that an accepted day's endpoints never get.
+# A failed build is not retried (the same commit fails the same way), manual
+# runs are left to whoever started them, and a rerun is not retried again.
+
+on:
+  workflow_run:
+    workflows: [Peer census]
+    types: [completed]
+
+permissions:
+  actions: write
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -e -o pipefail {0}
+
+jobs:
+  retry:
+    if: >-
+      github.repository == 'winnowwallet/census' &&
+      github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.event == 'schedule' &&
+      github.event.workflow_run.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Rerun after a Tor or publication failure
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN: ${{ github.event.workflow_run.id }}
+        run: |
+          failed=$(gh run view "$RUN" --repo "$GITHUB_REPOSITORY" --json jobs \
+            --jq '[.jobs[].steps[] | select(.conclusion == "failure") | .name] | join(", ")')
+          echo "failed steps: ${failed:-none}"
+          case "$failed" in
+            "Start Tor and an I2P router"|"Publish the aggregate")
+              gh run rerun "$RUN" --repo "$GITHUB_REPOSITORY" ;;
+            *)
+              echo "Not a Tor or publication failure; left for a person" ;;
+          esac
