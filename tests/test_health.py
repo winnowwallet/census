@@ -64,6 +64,23 @@ class HealthTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             calculate([(summary, raw)], self.now)
 
+    def test_window_census_counts_a_state_held_on_half_the_attempted_days(self):
+        def at(day, height, outcome='ok', tip=971_000):
+            summary, raw = run(day, height, outcome)
+            summary['observedTip'] = tip
+            return summary, raw
+        stuck = [at(9, 961_640), at(11, 961_652), at(13, 961_640, 'timeout')]
+        window = calculate(stuck, self.now)['windowCensus']
+        self.assertEqual(set(window), {'clearnet', 'tor', 'i2p'})
+        self.assertEqual(window['tor'], dict(assessed=1, answered=1, nearTip=0, atSplit=1, aheadOfTip=0))
+        mostly_down = [at(9, 971_000), at(11, 971_000, 'timeout'), at(13, 971_000, 'unreachable')]
+        self.assertEqual(calculate(mostly_down, self.now)['windowCensus']['i2p'],
+                         dict(assessed=1, answered=0, nearTip=0, atSplit=0, aheadOfTip=0))
+        ahead = [at(7, 972_000), at(9, 972_000), at(11, 971_000), at(13, 971_000)]
+        self.assertEqual(calculate(ahead, self.now)['windowCensus']['clearnet'],
+                         dict(assessed=1, answered=1, nearTip=1, atSplit=0, aheadOfTip=1))
+        self.assertEqual(calculate([at(11, 961_640), at(13, 961_640)], self.now)['windowCensus'], {})
+
     def test_different_same_day_run_requires_selection(self):
         with self.assertRaises(ValueError):
             calculate([run(13, 99), run(13, 100)], self.now)

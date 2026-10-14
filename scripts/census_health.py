@@ -21,6 +21,7 @@ from census_compare import endpoint, overlay
 
 UTC = dt.timezone.utc
 MAX_BYTES = 32 * 1024 * 1024
+SPLIT_HEIGHT = 961_632  # WinnowCensus makeSummary's default, for summaries that predate the field
 
 
 def read(path):
@@ -125,12 +126,18 @@ def calculate(runs, now):
         evidence.append({k: summary[k] for k in (
             'generatedAt', 'observationEndedAt', 'observedTip', 'inputSHA256',
             'recordsSHA256', 'processingRevision')})
+        split = summary.get('splitHeight', SPLIT_HEIGHT)
         for r in records:
             key = endpoint(f"{r['host']}:{r['port']}")
-            node = nodes.setdefault(key, {'endpoint': key, 'network': overlay(key), 'observations': []})
+            node = nodes.setdefault(key, {'endpoint': key, 'network': overlay(key), 'observations': [],
+                                          'splitResponseDays': 0, 'aheadResponseDays': 0})
             answered = r['outcome'] in ('ok', 'noCompactFilters')
             height = r.get('startHeight')
             near = answered and type(height) is int and height >= 0 and abs(height - summary['observedTip']) <= 100
+            # The census's own split and ahead rules, over every version response.
+            reported = answered and type(height) is int
+            node['splitResponseDays'] += reported and split <= height <= split + 20
+            node['aheadResponseDays'] += reported and height - summary['observedTip'] > 100
             node['observations'].append({
                 'date': day, 'outcome': r['outcome'], 'answered': answered,
                 'nearTipReport': near, 'reportedHeight': height,
@@ -144,6 +151,21 @@ def calculate(runs, now):
         node['nearTipResponseDays'] = sum(o['nearTipReport'] for o in obs)
         node['consistencyScore'] = ratio(node['nearTipResponseDays'], len(obs)) if len(obs) >= 3 else None
         node['status'] = 'measured' if len(obs) >= 3 else 'insufficient_history'
+    # The window's census: a node counts by what it did on at least half the
+    # days it was attempted, so one lost dial does not remove it and one
+    # answer does not add it. Under three attempted days it is not counted.
+    window = {}
+    for node in nodes.values():
+        if node['attemptDays'] < 3:
+            continue
+        net = 'clearnet' if node['network'] in ('ipv4', 'ipv6') else node['network']
+        counts = window.setdefault(net, dict.fromkeys(('assessed', 'answered', 'nearTip', 'atSplit', 'aheadOfTip'), 0))
+        half = lambda days: 2 * days >= node['attemptDays']
+        counts['assessed'] += 1
+        counts['answered'] += half(node['responseDays'])
+        counts['nearTip'] += half(node['nearTipResponseDays'])
+        counts['atSplit'] += half(node['splitResponseDays'])
+        counts['aheadOfTip'] += half(node['aheadResponseDays'])
     return {
         'schemaVersion': 1, 'modelVersion': 'observed-consistency-1',
         'asOf': now.isoformat(timespec='seconds').replace('+00:00', 'Z'),
@@ -153,7 +175,13 @@ def calculate(runs, now):
         'mining': {'status': 'unavailable', 'metrics': None},
         'definitions': {'consistencyScore': '100 * near-tip version response days / attempted days; minimum 3 days',
                         'missingDays': 'not attempted; excluded from denominator',
-                        'capabilities': 'reported services, separate from consistency; age has no automatic penalty'},
+                        'capabilities': 'reported services, separate from consistency; age has no automatic penalty',
+                        'windowCensus': 'endpoints attempted on at least 3 days, counted under each state they '
+                                        'showed on at least half of their attempted days: a version response '
+                                        '(answered), a height within 100 blocks of the tip (nearTip), within 20 '
+                                        'blocks above the BIP-110 split (atSplit), or over 100 blocks above the '
+                                        'tip (aheadOfTip)'},
+        'windowCensus': {k: window[k] for k in sorted(window)},
         'evidence': sorted(evidence, key=lambda x: x['generatedAt']),
         'nodes': [nodes[k] for k in sorted(nodes)]}
 
