@@ -109,13 +109,14 @@ jobs:
           # A stock client also sends every circuit through one guard, so a
           # guard that stops building them takes the whole Tor list with it:
           # on 2026-10-14 the run's guard completed 0 of 151 circuits and the
-          # Tor handshake rate fell to 8.6%. Four guards in use at once, from
-          # a primary list of eight, hold one bad guard to about a quarter of
-          # the dials. A public crawler has no use for a single guard's
-          # anonymity.
+          # Tor handshake rate fell to 8.6%. Several guards would not do: an
+          # onion dial builds about three circuits, so one dead guard of four
+          # still fails most of them. Without guards every circuit draws its
+          # first hop by bandwidth, and one bad relay carries only its share.
+          # A public crawler has no use for a guard's anonymity.
           nohup tor --SocksPort 9050 --DataDirectory "$RUNNER_TEMP/tor" --ClientOnly 1 \
             --MaxClientCircuitsPending 256 --LearnCircuitBuildTimeout 0 --CircuitBuildTimeout 60 \
-            --NumEntryGuards 4 --NumPrimaryGuards 8 \
+            --UseEntryGuards 0 \
             --Log "notice file $RUNNER_TEMP/tor.log" > /dev/null 2>&1 &
           nohup i2pd --datadir="$RUNNER_TEMP/i2pd" --socksproxy.enabled=true --socksproxy.port=4447 \
             --httpproxy.enabled=false --sam.enabled=false --i2pcontrol.enabled=false \
