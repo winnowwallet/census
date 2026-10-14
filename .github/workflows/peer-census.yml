@@ -21,6 +21,12 @@ name: Peer census
 on:
   schedule:
     - cron: "23 5 * * *"
+    # The off-hours sample, twelve hours on: the first 3,000 endpoints of the
+    # day's seeded order, dialled at another hour and never published, to set
+    # beside that day's census (scripts/census_time_of_day.py). Every census
+    # has been dialled within a few hours of 11:00 UTC, so a node that keeps
+    # daily hours looks the same each day.
+    - cron: "23 17 * * *"
   workflow_dispatch:
     inputs:
       sample:
@@ -39,7 +45,9 @@ permissions:
   contents: write
 
 concurrency:
-  group: peer-census
+  # The off-hours sample queues on its own: in one group a newer pending run
+  # cancels an older one, and a sample must never displace a census.
+  group: peer-census${{ github.event.schedule == '23 17 * * *' && '-off-hours' || '' }}
   cancel-in-progress: false
 
 jobs:
@@ -51,15 +59,18 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Validate run scope
+        id: scope
         env:
-          SAMPLE: ${{ inputs.sample || '0' }}
-          PUBLISH: ${{ github.event_name != 'workflow_dispatch' || inputs.publish }}
+          SAMPLE: ${{ github.event.schedule == '23 17 * * *' && '3000' || inputs.sample || '0' }}
+          PUBLISH: ${{ github.event.schedule != '23 17 * * *' && (github.event_name != 'workflow_dispatch' || inputs.publish) }}
         run: |
           [[ "$SAMPLE" =~ ^[0-9]+$ ]] || { echo "::error::sample must be a nonnegative integer"; exit 1; }
           if [[ "$PUBLISH" == "true" && "$SAMPLE" != "0" ]]; then
             echo "::error::Diagnostic samples cannot publish production data"
             exit 1
           fi
+          echo "sample=$SAMPLE" >> "$GITHUB_OUTPUT"
+          echo "publish=$PUBLISH" >> "$GITHUB_OUTPUT"
 
       - name: Fetch the day's snapshot
         run: |
@@ -148,7 +159,7 @@ jobs:
         # the second run lost every Tor handshake a quarter of the way in,
         # and nothing in the job output said why.
         env:
-          SAMPLE: ${{ inputs.sample || '0' }}
+          SAMPLE: ${{ steps.scope.outputs.sample }}
         run: |
           # Heights are judged against the median that usable peers report.
           # The snapshot's latest_height is only a cross-check: on 2026-09-29 it
@@ -180,7 +191,7 @@ jobs:
           grep -hE '\[(warn|err)\]' tor.log 2>/dev/null | sed -E 's/^[A-Za-z]{3} [0-9]{2} [0-9:.]+ //' | sort | uniq -c | sort -rn | head -n 20 || true
 
       - name: Publish the aggregate
-        if: ${{ github.event_name != 'workflow_dispatch' || inputs.publish }}
+        if: steps.scope.outputs.publish == 'true'
         env:
           CENSUS_SIGNING_KEY: ${{ secrets.CENSUS_SIGNING_KEY }}
         run: |
@@ -213,7 +224,7 @@ jobs:
           exit 1
 
       - name: Assemble the site
-        if: ${{ github.event_name != 'workflow_dispatch' || inputs.publish }}
+        if: steps.scope.outputs.publish == 'true'
         run: |
           rm -rf site && mkdir site
           cp index.html site/
@@ -222,7 +233,7 @@ jobs:
           cp -r census site/census
 
       - name: Deploy the Worker
-        if: ${{ github.event_name != 'workflow_dispatch' || inputs.publish }}
+        if: steps.scope.outputs.publish == 'true'
         uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}

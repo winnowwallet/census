@@ -29,9 +29,15 @@ numbers describe observed endpoints: handshake outcomes, advertised services, an
   and rebuilds `census/index.json`.
 - `scripts/census-tables` — Markdown tables from a run's JSON lines, for a
   write-up.
+- `scripts/census_time_of_day.py` — sets a downloaded off-hours sample beside
+  the census it followed, endpoint by endpoint: answered in both, in one, or in
+  neither. Tor's answer rate varies more from run to run than a few hours
+  explain, so its time-of-day signal needs many pairs.
 - `.github/workflows/peer-census.yml` — the daily run on a GitHub-hosted macOS
   runner, which installs Tor and i2pd itself, commits the aggregate here, and
-  deploys the site.
+  deploys the site. A second schedule twelve hours later dials a 3,000-endpoint
+  sample of the day's list and publishes nothing; its records stay in the
+  two-week artifact.
 - `.github/workflows/site.yml` and `wrangler.jsonc` — deploy `index.html` and
   `census/` as a Cloudflare Worker with static assets on every push to main.
   The Worker's custom domain, census.winnowwallet.com, gets its DNS record and
