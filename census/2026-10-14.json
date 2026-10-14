@@ -1,88 +1,88 @@
 {
-  "aheadOfTip" : 164,
-  "behind" : 258,
+  "aheadOfTip" : 189,
+  "behind" : 295,
   "completeRun" : true,
-  "dialled" : 24910,
-  "expectedRecords" : 24910,
+  "dialled" : 25595,
+  "expectedRecords" : 25595,
   "families" : {
     "Core" : {
-      "atTip" : 4720,
-      "behind" : 8,
+      "atTip" : 5393,
+      "behind" : 5,
       "medianFeeFilterSatPerKvB" : 100,
       "stuckAtSplit" : 3,
-      "usable" : 4728
+      "usable" : 5398
     },
     "Knots" : {
-      "atTip" : 673,
-      "behind" : 247,
+      "atTip" : 757,
+      "behind" : 287,
       "medianFeeFilterSatPerKvB" : 1000,
-      "stuckAtSplit" : 245,
-      "usable" : 1084
+      "stuckAtSplit" : 283,
+      "usable" : 1232
     },
     "btcd" : {
-      "atTip" : 10,
+      "atTip" : 9,
       "behind" : 3,
       "stuckAtSplit" : 0,
-      "usable" : 13
+      "usable" : 12
     },
     "other" : {
-      "atTip" : 2,
+      "atTip" : 3,
       "behind" : 0,
-      "medianFeeFilterSatPerKvB" : 100,
+      "medianFeeFilterSatPerKvB" : 1000,
       "stuckAtSplit" : 0,
-      "usable" : 2
+      "usable" : 4
     }
   },
-  "generatedAt" : "2026-10-14T12:52:26Z",
-  "handshakeLatencyMsMedian" : 6975,
-  "inputSHA256" : "c1938919bcfc8e02d9ec982c0c09121a720458a32f1133c4248473366ca77cee",
+  "generatedAt" : "2026-10-14T21:22:40Z",
+  "handshakeLatencyMsMedian" : 6910,
+  "inputSHA256" : "7a0d421b529d01a5792500af45d5942d2e35805fed3d349dd04c39181e68881b",
   "medianFeeFilterSatPerKvB" : 100,
   "networks" : {
     "clearnet" : {
-      "atTip" : 1128,
-      "behind" : 48,
-      "dialled" : 8703,
-      "noCompactFilters" : 6183,
+      "atTip" : 1126,
+      "behind" : 47,
+      "dialled" : 8758,
+      "noCompactFilters" : 6228,
       "stuckAtSplit" : 42,
-      "usable" : 1226
+      "usable" : 1224
     },
     "i2p" : {
-      "atTip" : 2320,
-      "behind" : 107,
-      "dialled" : 4288,
-      "noCompactFilters" : 1574,
-      "stuckAtSplit" : 106,
-      "usable" : 2490
+      "atTip" : 2411,
+      "behind" : 109,
+      "dialled" : 4341,
+      "noCompactFilters" : 1641,
+      "stuckAtSplit" : 108,
+      "usable" : 2586
     },
     "tor" : {
-      "atTip" : 1957,
-      "behind" : 103,
-      "dialled" : 11919,
-      "noCompactFilters" : 4423,
-      "stuckAtSplit" : 100,
-      "usable" : 2111
+      "atTip" : 2625,
+      "behind" : 139,
+      "dialled" : 12496,
+      "noCompactFilters" : 5990,
+      "stuckAtSplit" : 136,
+      "usable" : 2836
     }
   },
-  "observationEndedAt" : "2026-10-14T14:15:37Z",
-  "observedTip" : 971406,
+  "observationEndedAt" : "2026-10-14T22:41:18Z",
+  "observedTip" : 971468,
   "outcomes" : {
-    "noCompactFilters" : 12180,
-    "ok" : 5827,
-    "timeout" : 6706,
-    "unreachable" : 197
+    "noCompactFilters" : 13859,
+    "ok" : 6646,
+    "timeout" : 4883,
+    "unreachable" : 207
   },
-  "peerListSHA256" : "23aab93d25481ec7147717140ec17b29540020e18746bf16f3fa10a8d85d3aa9",
-  "processedAt" : "2026-10-14T14:15:41Z",
-  "processingRevision" : "431e962ce225b73f2eb008d1b17480f875de3cda",
-  "recordsSHA256" : "36bba1886593b7c18379009eeb73b8a1e7f427988ebfdf7c60297e532e6e94c5",
+  "peerListSHA256" : "63f17546f3ec502ce795b4ced2c4e0d08e92045d55c392bc7b9025065343ccd5",
+  "processedAt" : "2026-10-14T22:41:23Z",
+  "processingRevision" : "bc6b89831954a4b29b45db9614367983cbc7667e",
+  "recordsSHA256" : "f0a835c04d161234469f422d6fc3ee6502dbfb3c0c5f2a7d661a6d38d447d4c1",
   "sample" : 0,
   "splitHeight" : 961632,
-  "stuckAtSplit" : 248,
-  "usable" : 5827,
+  "stuckAtSplit" : 286,
+  "usable" : 6646,
   "wholeNetworkFamilies" : {
-    "Core" : 14947,
-    "Knots" : 3004,
-    "btcd" : 14,
-    "other" : 42
+    "Core" : 17019,
+    "Knots" : 3423,
+    "btcd" : 13,
+    "other" : 50
   }
 }
