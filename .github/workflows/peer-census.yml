@@ -93,10 +93,11 @@ jobs:
             echo "::warning::btcnodes did not answer; dialling the census's own history, seeds and gossip"
           fi
 
+      - name: Install Lean
+        run: scripts/install-lean
+
       - name: Build census-input
-        run: |
-          scripts/install-lean
-          lake build census-input
+        run: lake build census-input
 
       - name: Build
         # The wallet repo keeps its docs screenshots in Git LFS, and its LFS
