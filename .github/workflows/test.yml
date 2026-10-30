@@ -3,7 +3,7 @@ on:
   pull_request:
   push:
     branches: [main]
-    paths: ['Sources/**', 'Package*', 'scripts/**', 'tests/**', 'comparison/**', '.github/workflows/test.yml']
+    paths: ['Sources/**', 'Package*', 'scripts/**', 'tests/**', 'comparison/**', 'WinnowCensus/**', '*.lean', 'lakefile.toml', 'lake-manifest.json', 'lean-toolchain', '.github/workflows/test.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -32,3 +32,28 @@ jobs:
             build.log
             tests.log
             comparison-report.log
+  lean:
+    # The census moving to Lean (WinnowCensus/): its crypto against published vectors, the Swift tool's
+    # known answer and the published census/peers.json and its signature.
+    runs-on: macos-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash --noprofile --norc -e -o pipefail {0}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Lean
+        run: scripts/install-lean
+      - name: Build
+        run: lake build census-test census-input 2>&1 | tee lean-build.log
+      - name: census-test
+        run: .lake/build/bin/census-test 2>&1 | tee census-test.log
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: census-lean-${{ github.run_id }}
+          path: |
+            lean-build.log
+            census-test.log

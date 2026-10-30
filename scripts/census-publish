@@ -69,6 +69,8 @@ def index_for(days):
             "handshakeLatencyMsMedian": day.get("handshakeLatencyMsMedian"),
             "medianFeeFilterSatPerKvB": day.get("medianFeeFilterSatPerKvB"),
         })
+        if "input" in day:
+            index[-1]["input"] = day["input"]
     return {"days": index}
 
 try:
