@@ -1,7 +1,13 @@
 name: Peer census
 
-# Dials every reachable endpoint in the day's btcnodes snapshot with Winnow's
-# own handshake, commits the aggregate to census/, and deploys the site
+# Dials the day's list with Winnow's own handshake: the btcnodes snapshot,
+# the endpoints the census itself published in the last week
+# (census/known.txt), clearnet peers from the DNS seeds, and Tor and I2P peers
+# that known peers name when asked (getaddr, answered in addrv2). The list is
+# gathered by census-input (CensusInput.lean). A failed, stale or shrunken
+# snapshot no longer loses the day: it is recorded in the summary's input
+# block, and input.outcomes.btcnodes keeps the snapshot's own endpoints
+# comparable with the days it was the whole input. It commits the aggregate to census/, and deploys the site
 # Worker (a push made with the workflow token does not trigger the Site
 # workflow, so this job deploys itself). Read-only against the network:
 # version, verack, a short wait for feefilter, disconnect.
@@ -73,10 +79,24 @@ jobs:
           echo "publish=$PUBLISH" >> "$GITHUB_OUTPUT"
 
       - name: Fetch the day's snapshot
+        # A failed fetch is recorded, not fatal: the census dials its own
+        # history, seeds and gossip without it (19 and 22 October 2026 were
+        # lost to btcnodes fetch failures).
         run: |
-          curl -fsSL --max-time 120 -A "winnow-census/0.1 (+https://github.com/winnowwallet/census)" \
-            -o snapshot.json "https://btcnodes.io/api/v1/snapshots/latest/"
-          python3 -c 'import json; d=json.load(open("snapshot.json")); print(len(d["nodes"]), "reachable endpoints, tip", d.get("latest_height"))'
+          if curl -fsSL --retry 4 --retry-delay 30 --retry-all-errors --max-time 120 \
+              -A "winnow-census/0.1 (+https://github.com/winnowwallet/census)" \
+              -o snapshot.json "https://btcnodes.io/api/v1/snapshots/latest/"; then
+            python3 -c 'import json; d=json.load(open("snapshot.json")); print(len(d["nodes"]), "reachable endpoints, tip", d.get("latest_height"))' \
+              || echo "::warning::the btcnodes snapshot does not parse; dialling without it"
+          else
+            rm -f snapshot.json
+            echo "::warning::btcnodes did not answer; dialling the census's own history, seeds and gossip"
+          fi
+
+      - name: Build census-input
+        run: |
+          scripts/install-lean
+          lake build census-input
 
       - name: Build
         # The wallet repo keeps its docs screenshots in Git LFS, and its LFS
@@ -154,7 +174,16 @@ jobs:
             tail -n 20 "$RUNNER_TEMP/i2pd.log" 2>/dev/null || true
           fi
 
-      - name: Dial every reachable endpoint
+      - name: Gather the dial list
+        # After the routers, so Tor and I2P peers can be asked for theirs.
+        run: |
+          .lake/build/bin/census-input gather --date "$(date -u +%Y-%m-%d)" --snapshot snapshot.json --census census \
+            --history-days 7 --seeds --gossip-tor 150 --gossip-i2p 150 --gossip-parallel 48 --gossip-deadline 90 \
+            --tor-socks 127.0.0.1:9050 --i2p-socks 127.0.0.1:4447 \
+            --out input.txt --sources input-sources.txt --report input.json
+          cat input.json
+
+      - name: Dial every endpoint
         # The router logs and a health line at the end go into the artifact:
         # the second run lost every Tor handshake a quarter of the way in,
         # and nothing in the job output said why.
@@ -165,13 +194,15 @@ jobs:
           # The snapshot's latest_height is only a cross-check: on 2026-09-29 it
           # lagged the chain by more than 100 blocks, every honest peer looked
           # "ahead", and publication was refused for an empty overlay.
-          SNAPSHOT_TIP=$(python3 -c 'import json; print(json.load(open("snapshot.json")).get("latest_height", 0))')
+          SNAPSHOT_TIP=$(python3 -c 'import json; print(json.load(open("snapshot.json")).get("latest_height") or 0)' 2>/dev/null || echo 0)
           SAMPLE_FLAG=""; [ "$SAMPLE" = "0" ] || SAMPLE_FLAG="--sample $SAMPLE"
           echo "snapshot tip $SNAPSHOT_TIP; sample ${SAMPLE}; fd limit $(ulimit -n); $(tor --version | head -n 1)"
-          .build/release/WinnowCensus --input snapshot.json --parallel 128 --tor-parallel 48 --i2p-parallel 64 \
+          .build/release/WinnowCensus --input input.txt --parallel 128 --tor-parallel 48 --i2p-parallel 64 \
             --timeout 8 --hidden-timeout 30 \
             --tor-socks 127.0.0.1:9050 --i2p-socks 127.0.0.1:4447 $SAMPLE_FLAG \
             --out census.jsonl --summary-json summary.json | tee census-summary.txt
+          .lake/build/bin/census-input annotate --report input.json --sources input-sources.txt \
+            --records census.jsonl --summary summary.json
           OBSERVED_TIP=$(python3 -c 'import json; print(json.load(open("summary.json"))["observedTip"])')
           GAP=$(( OBSERVED_TIP > SNAPSHOT_TIP ? OBSERVED_TIP - SNAPSHOT_TIP : SNAPSHOT_TIP - OBSERVED_TIP ))
           if [ "$SNAPSHOT_TIP" -gt 0 ] && [ "$GAP" -gt 100 ]; then
@@ -196,6 +227,8 @@ jobs:
           CENSUS_SIGNING_KEY: ${{ secrets.CENSUS_SIGNING_KEY }}
         run: |
           scripts/census-publish summary.json --peers peers.json --records census.jsonl --dir census
+          # The published list joins the census's history for tomorrow's dial.
+          .lake/build/bin/census-input known --known census/known.txt --peers census/peers.json --keep-days 90
           # Refuse to publish if the signing secret is missing or does not
           # match the public key trusted by the wallet.
           .build/release/WinnowCensus sign --key-env CENSUS_SIGNING_KEY census/peers.json
@@ -251,6 +284,9 @@ jobs:
           name: peer-census-${{ github.run_id }}${{ github.run_attempt != '1' && format('-{0}', github.run_attempt) || '' }}
           path: |
             snapshot.json
+            input.txt
+            input-sources.txt
+            input.json
             summary.json
             peers.json
             census.jsonl

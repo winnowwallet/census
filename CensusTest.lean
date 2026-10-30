@@ -99,6 +99,77 @@ def main : IO UInt32 := do
   check "another message is refused" (!Ed25519.verify livePk (domain ++ peerBytes.push 10) liveSig)
   check "without the domain tag it is refused" (!Ed25519.verify livePk peerBytes liveSig)
   check "another key is refused" (!Ed25519.verify (Ed25519.publicKey seed) (domain ++ peerBytes) liveSig)
+  -- addrv2 (BIP155)
+  let v4 := encodeAddrV2Entry 1793380000 (1 ||| 8 ||| 64 ||| 1024) 1 (ByteArray.mk #[93, 184, 216, 34]) 8333
+  let v6 := encodeAddrV2Entry 1793380001 1 2 (ofHex! "2a0104f8000000000000000000000002") 8333
+  let tor3 := encodeAddrV2Entry 1793380002 72 4 (key 1) 8333
+  let i2p := encodeAddrV2Entry 1793380003 72 5 (ByteArray.mk (Array.replicate 32 0)) 0
+  let torV2 := encodeAddrV2Entry 1793380004 72 3 (ByteArray.mk (Array.replicate 10 1)) 8333
+  let cjdns := encodeAddrV2Entry 1793380005 72 6 (ofHex! "fc000000000000000000000000000001") 8333
+  let priv := encodeAddrV2Entry 1793380006 72 1 (ByteArray.mk #[10, 0, 0, 1]) 8333
+  let payload := compactSize 7 ++ v4 ++ v6 ++ tor3 ++ i2p ++ torV2 ++ cjdns ++ priv
+  match decodeAddrV2 payload with
+  | .ok (count, hs) =>
+    check "addrv2: seven entries, four the census can dial" (count == 7 && hs.size == 4) s!"{count} {hs.size}"
+    check "addrv2: IPv4 with its services and time" (hs[0]?.map (·.key) == some "93.184.216.34:8333" &&
+      hs[0]?.map (·.services) == some 1097 && hs[0]?.map (·.time) == some 1793380000)
+    check "addrv2: IPv6 canonical and bracketed" (hs[1]?.map (·.key) == some "[2a01:4f8::2]:8333") s!"{hs[1]?.map (·.key)}"
+    check "addrv2: a Tor v3 key becomes its onion" (hs[2]?.map (·.host) == some (onionAddress (key 1)))
+    check "addrv2: an I2P hash becomes its .b32.i2p name, port 0 as 8333"
+      (hs[3]?.map (·.key) == some ("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.b32.i2p:8333"))
+  | .error e => check "addrv2 decodes" false (repr e |>.pretty)
+  check "addrv2: an address of the wrong length is refused"
+    ((decodeAddrV2 (compactSize 1 ++ encodeAddrV2Entry 0 0 1 (ByteArray.mk #[1, 2, 3]) 8333)).toOption.isNone)
+  check "addrv2: more than 1,000 entries is refused" ((decodeAddrV2 (compactSize 1001)).toOption.isNone)
+  check "addrv2: trailing bytes are refused" ((decodeAddrV2 (compactSize 1 ++ v4 ++ ByteArray.mk #[0])).toOption.isNone)
+  -- the dial list
+  check "host:port parsing as the Swift tool does" (parseHostPort "[2A01:4F8::2]:8333" == some ("2a01:4f8::2", 8333) &&
+    parseHostPort "1.2.3.4:0" == none && parseHostPort "1.2.3.4" == none && parseHostPort "[::1:8333" == none)
+  -- an unbracketed IPv6 host splits on its last colon, as in the Swift tool
+  check "canonical keys: clearnet, an onion, IPv4-mapped collapsed, a private address refused"
+    (canonicalKey "93.184.216.34:8333" == some ("93.184.216.34:8333", .clearnet) &&
+     canonicalKey s!"{good.toUpper}:8333" == some (s!"{good}:8333", .tor) && canonicalKey "10.0.0.1:8333" == none &&
+     canonicalKey "::ffff:93.184.216.34:8333" == some ("93.184.216.34:8333", .clearnet) && canonicalKey "[::ffff:93.184.216.34]:8333" == some ("93.184.216.34:8333", .clearnet))
+  let snap : Snapshot := { nodes := #["a", "b", "c"], latestHeight := some 973_855, timestamp := some 1_793_385_294, sha256 := "aa" }
+  let now : Int := 1_793_400_000
+  check "a fresh snapshot has no problems" (snapshotProblems snap (some { date := "2026-10-30", sha256 := some "bb", nodes := some 4 }) now == #[])
+  check "a snapshot with no tip, stale, unchanged and shrunk says so"
+    (snapshotProblems { snap with latestHeight := some 0, timestamp := some (now - 40 * 3600) }
+      (some { date := "2026-10-30", sha256 := some "aa", nodes := some 5 }) now == #["noTip", "stale", "unchanged", "shrank"])
+  check "a snapshot without the fields is noTip and stale" (snapshotProblems { snap with latestHeight := none, timestamp := none } none now == #["noTip", "stale"])
+  let some parsed := (Json.parse "{\"timestamp\": 1793385294, \"latest_height\": 973855, \"nodes\": {\"1.2.3.4:8333\": []}}").toOption
+    | check "snapshot json" false; return 1
+  check "a summary from before the input block gives inputSHA256 and dialled"
+    ((PreviousSnapshot.ofSummary "d" (Json.mkObj [("inputSHA256", "cc"), ("dialled", 7)])).nodes == some 7 &&
+     (PreviousSnapshot.ofSummary "d" (Json.mkObj [("inputSHA256", "cc"), ("dialled", 7),
+       ("input", Json.mkObj [("btcnodes", Json.mkObj [("sha256", "dd"), ("nodes", 9)])])])).sha256 == some "dd")
+  check "a snapshot parses" ((Snapshot.parse parsed.compress "x").toOption.map (·.nodes.size) == some 1)
+  let known := Known.parse "93.184.216.34:8333 2026-10-01\n93.184.216.34:8333 2026-10-20\nnot-a-host:8333 2026-10-20\n10.0.0.1:8333 2026-10-20\n"
+  check "history keeps the latest day and refuses what the census never dials" (known.size == 1 && known.get? "93.184.216.34:8333" == some "2026-10-20")
+  let peersDoc := Json.mkObj [("date", "2026-10-30"), ("networks", Json.mkObj [("clearnet", Json.arr #[Json.mkObj [("host", "93.184.216.35"), ("port", 8333)]]),
+    ("tor", Json.arr #[Json.mkObj [("host", good), ("port", 8333)]])])]
+  match (Known.parse "93.184.216.34:8333 2026-07-01\n93.184.216.36:8333 2026-10-29\n").merge peersDoc 90 with
+  | .ok m =>
+    check "a published list enters history and old entries leave"
+      (m.size == 3 && m.get? s!"{good}:8333" == some "2026-10-30" && m.get? "93.184.216.34:8333" == none)
+    check "history renders sorted" (m.render.startsWith "22nzruy" && (Known.parse m.render).size == 3)
+    check "recent history is a window ending today" ((m.recent "2026-10-30" 1).size == 2 && (m.recent "2026-10-31" 1).size == 0)
+  | .error e => check "history merges" false e
+  let l := (({} : DialList).add "b" .clearnet .btcnodes).add "a" .tor .history |>.add "b" .clearnet .gossip |>.add "b" .clearnet .gossip
+  check "the dial list keeps each endpoint once with every source" (l.sorted.map (·.1) == #["a", "b"] &&
+    l.counts == [("btcnodes", 1, 0), ("history", 1, 1), ("seeds", 0, 0), ("gossip", 1, 0)])
+  check "sources round-trip" ((parseSources l.renderSources).get? "b" == some #[.btcnodes, .gossip])
+  let answers : Array Answer := #[
+    { peer := "p", overlay := .clearnet, heard := #[
+      { host := "93.184.216.34", port := 8333, services := 72, time := 1_793_399_000 },
+      { host := "93.184.216.34", port := 8333, services := 72, time := 1_793_399_500 },
+      { host := "93.184.216.37", port := 8333, services := 9, time := 1_793_399_000 },
+      { host := "93.184.216.38", port := 8333, services := 72, time := 1_793_000_000 },
+      { host := "93.184.216.39", port := 18333, services := 72, time := 1_793_399_000 }] },
+    { peer := "q", overlay := .tor, heard := #[{ host := "93.184.216.34", port := 8333, services := 72, time := 1_793_399_900 }] }]
+  let t := tally answers now 86_400
+  check "gossip keeps fresh compact-filter peers on 8333, counting each answering peer once"
+    (t.size == 1 && t.get? "93.184.216.34:8333" == some (.clearnet, 2, 1_793_399_900))
   let n ← failures.get
   IO.println (if n == 0 then "census-test: all passed" else s!"census-test: {n} failed")
   return if n == 0 then 0 else 1

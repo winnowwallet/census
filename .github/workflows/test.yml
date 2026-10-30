@@ -47,7 +47,7 @@ jobs:
       - name: Install Lean
         run: scripts/install-lean
       - name: Build
-        run: lake build census-test 2>&1 | tee lean-build.log
+        run: lake build census-test census-input 2>&1 | tee lean-build.log
       - name: census-test
         run: .lake/build/bin/census-test 2>&1 | tee census-test.log
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

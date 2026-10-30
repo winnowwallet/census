@@ -1,7 +1,7 @@
 # The census in Lean: it dials with the Winnow wallet's own Lean peer code (winnowwallet/winnow-lean's
 # Lean package, pinned), and signs, publishes and renders the census without Swift, Python or JavaScript.
 name = "census"
-defaultTargets = ["WinnowCensus", "census-test"]
+defaultTargets = ["WinnowCensus", "census-test", "census-input"]
 
 [[require]]
 name = "winnow"
@@ -16,3 +16,8 @@ name = "WinnowCensus"
 [[lean_exe]]
 name = "census-test"
 root = "CensusTest"
+
+# The day's dial list (btcnodes, the census's own history, DNS seeds, getaddr gossip) and its report.
+[[lean_exe]]
+name = "census-input"
+root = "CensusInput"

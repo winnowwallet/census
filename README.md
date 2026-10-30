@@ -67,6 +67,28 @@ holds them to RFC 8032's and FIPS 202's vectors, RFC 4648's, the Python tests' o
 tool's known answer, every overlay host in `census/peers.json`, and the published `peers.json.sig`. The
 Swift tool still runs the census until the Lean one matches it.
 
+### Where the dial list comes from
+
+The census no longer depends on btcnodes alone. `census-input gather` (`CensusInput.lean`,
+`WinnowCensus/Input.lean`, `WinnowCensus/Gossip.lean`) gathers the day's list before the dial from:
+
+- **btcnodes**: the snapshot, when there is one. Its state is recorded, never a reason to stop: `missing`,
+  `unreadable`, or `degraded` for `noTip`, `stale` (over 36 hours old), `unchanged` (the previous day's bytes)
+  or `shrank` (under three quarters of the previous day's nodes).
+- **history**: the endpoints the census published in the last 7 days, from `census/known.txt` (one
+  `host:port day` line each, the day it was last published; entries leave after 90 days). Longer gains
+  nothing: on 2026-10-31, of the published peers missing from btcnodes, 48% of those last published a day
+  earlier answered, 10–15% of those two to seven days old, and none of 728 older ones.
+- **seeds**: the DNS seeds' `x49` names (nodes serving compact filters), clearnet only.
+- **gossip**: Tor and I2P peers from history are asked `getaddr` after `sendaddrv2` (BIP155), and the
+  overlay peers they name that advertise compact filters and were heard of within a day are added, at most
+  1,000 per overlay. Clearnet gossip is off: 1,000 such endpoints yielded 3 usable peers on 2026-10-31.
+
+Without any snapshot, history and seeds alone gave 973 publishable clearnet peers on 2026-10-31, where
+btcnodes' list had given 1,140 the day before. `census-input annotate` puts the report into the day's
+summary as `input`, with the dial's outcomes counted per source: `input.outcomes.btcnodes` counts only the
+snapshot's endpoints, comparable with the days before 2026-10-31, when the snapshot was the whole input.
+
 ## The peer list (`census/peers.json`)
 
 The one per-node artifact kept permanently. Each run derives a validated candidate list from the day's JSON lines.
