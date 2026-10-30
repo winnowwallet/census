@@ -54,6 +54,19 @@ numbers describe observed endpoints: handshake outcomes, advertised services, an
   Other per-node detail is a two-week workflow artifact; btcnodes already
   publishes the per-IP view.
 
+## Moving to Lean
+
+The census is moving to Lean, onto the Winnow wallet's own Lean peer code (winnowwallet/winnow-lean's `Lean/`
+package, pinned in `lakefile.toml`), replacing the Swift tool, the Python scripts and the JavaScript pages:
+the site will be static HTML written by Lean. The published files (`census/*.json`, `peers.json` and its
+signature) keep their formats and the signing key, so installed wallets are unaffected.
+
+So far (`WinnowCensus/`): Ed25519 (RFC 8032; key generation, signing, cofactored verification), SHA3-256
+and base32 with the Tor and I2P host checks. `lake build census-test && .lake/build/bin/census-test`
+holds them to RFC 8032's and FIPS 202's vectors, RFC 4648's, the Python tests' onion addresses, the Swift
+tool's known answer, every overlay host in `census/peers.json`, and the published `peers.json.sig`. The
+Swift tool still runs the census until the Lean one matches it.
+
 ## The peer list (`census/peers.json`)
 
 The one per-node artifact kept permanently. Each run derives a validated candidate list from the day's JSON lines.

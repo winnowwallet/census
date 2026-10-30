@@ -1,0 +1,18 @@
+# The census in Lean: it dials with the Winnow wallet's own Lean peer code (winnowwallet/winnow-lean's
+# Lean package, pinned), and signs, publishes and renders the census without Swift, Python or JavaScript.
+name = "census"
+defaultTargets = ["WinnowCensus", "census-test"]
+
+[[require]]
+name = "winnow"
+git = "https://github.com/winnowwallet/winnow-lean.git"
+rev = "bce5d97c0d317bef862cb616ef47d71603df100a"
+subDir = "Lean"
+
+[[lean_lib]]
+name = "WinnowCensus"
+
+# The census's own checks: the crypto against published vectors and the Swift tool's known answers.
+[[lean_exe]]
+name = "census-test"
+root = "CensusTest"
