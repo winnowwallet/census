@@ -82,7 +82,13 @@ The census no longer depends on btcnodes alone. `census-input gather` (`CensusIn
 - **seeds**: the DNS seeds' `x49` names (nodes serving compact filters), clearnet only.
 - **gossip**: Tor and I2P peers from history are asked `getaddr` after `sendaddrv2` (BIP155), and the
   overlay peers they name that advertise compact filters and were heard of within a day are added, at most
-  1,000 per overlay. Clearnet gossip is off: 1,000 such endpoints yielded 3 usable peers on 2026-10-31.
+  1,000 per overlay. Clearnet gossip is off: 1,000 such endpoints yielded 3 usable peers on 2026-10-31,
+  and 4 of the 1,000 that Tor and I2P peers named on 2026-10-30.
+
+The first full run on these inputs (diagnostic, 2026-10-30, unpublished): 21,696 endpoints, 18,561 of them
+btcnodes'. Of the 3,135 btcnodes did not list, 626 were usable: on Tor, 102 of 245 found only by gossip and
+63 of 827 only in history; on I2P, 85 of 129 and 59 of 217. Its list had 2,875 Tor, 2,895 I2P and 995
+clearnet peers, where that morning's published list had 2,472, 2,810 and 939.
 
 Without any snapshot, history and seeds alone gave 973 publishable clearnet peers on 2026-10-31, where
 btcnodes' list had given 1,140 the day before. `census-input annotate` puts the report into the day's

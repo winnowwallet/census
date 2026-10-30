@@ -125,8 +125,12 @@ def gather (a : Args) : IO UInt32 := do
     let answers ← askAll peers NetworkParams.mainnet (a.nat "--gossip-parallel" 64) (1000 * a.nat "--gossip-deadline" 75)
     let heard := tally answers now (3600 * a.nat "--gossip-max-age-hours" 24)
     let cap := a.nat "--gossip-cap" 1000
+    -- an overlay is taken from gossip only when it was asked: Tor and I2P peers name clearnet peers too, and
+    -- on 2026-10-30 1,000 of those gave 4 usable peers
+    let asked := (asks.filter (·.2 > 0)).map (·.1)
+    let heard := heard.filter fun _ (o, _, _) => asked.contains o
     let mut accepted : Array (String × Overlay) := #[]
-    for o in [Overlay.clearnet, .tor, .i2p] do
+    for o in asked do
       let fresh := heard.toArray.filter fun (k, (o', _, _)) => o' == o && !list.contains k && dialable o
       let ranked := fresh.qsort fun (k₁, (_, n₁, t₁)) (k₂, (_, n₂, t₂)) =>
         n₁ > n₂ || (n₁ == n₂ && (t₁ > t₂ || (t₁ == t₂ && k₁ < k₂)))
