@@ -3810,77 +3810,186 @@
       }
     },
     {
-      "behind": 2,
-      "coreUsable": 5708,
+      "behind": 67,
+      "coreUsable": 6210,
       "date": "2026-10-30",
-      "dialled": 18102,
+      "dialled": 20732,
       "families": {
         "Core": {
-          "atTip": 5708,
-          "behind": 0,
+          "atTip": 6209,
+          "behind": 1,
           "medianFeeFilterSatPerKvB": 100,
-          "stuckAtSplit": 0,
-          "usable": 5708
+          "stuckAtSplit": 1,
+          "usable": 6210
         },
         "Knots": {
-          "atTip": 703,
-          "behind": 2,
+          "atTip": 755,
+          "behind": 66,
           "medianFeeFilterSatPerKvB": 1000,
-          "stuckAtSplit": 1,
-          "usable": 705
+          "stuckAtSplit": 60,
+          "usable": 925
         },
         "btcd": {
-          "atTip": 9,
+          "atTip": 12,
           "behind": 0,
           "stuckAtSplit": 0,
-          "usable": 9
+          "usable": 12
         },
         "other": {
           "atTip": 2,
           "behind": 0,
           "medianFeeFilterSatPerKvB": 100,
           "stuckAtSplit": 0,
-          "usable": 2
+          "usable": 4
         }
       },
-      "handshakeLatencyMsMedian": 5563,
-      "knotsStuck": 1,
-      "knotsUsable": 705,
+      "handshakeLatencyMsMedian": 6756,
+      "input": {
+        "btcnodes": {
+          "dialable": 18543,
+          "latestHeight": 973870,
+          "nodes": 18548,
+          "previous": {
+            "date": "2026-10-29",
+            "nodes": 18085,
+            "sha256": "177cb33f338c0a9b3bcba6e9435994bcb4d8e1f1efc431f7e2f83714923b5c38"
+          },
+          "problems": [],
+          "sha256": "7591dcc1fa3bfcd248eec0fecc5eff67269e0ca432c3b95da50deaffb8429be1",
+          "status": "ok",
+          "timestamp": 1793392397
+        },
+        "byOverlay": {
+          "clearnet": 6822,
+          "i2p": 5068,
+          "tor": 8842
+        },
+        "date": "2026-10-30",
+        "endpoints": 20732,
+        "gossip": {
+          "added": {
+            "clearnet": 0,
+            "i2p": 121,
+            "tor": 242
+          },
+          "addresses": 276587,
+          "alreadyListed": 4704,
+          "answered": {
+            "clearnet": 0,
+            "i2p": 141,
+            "tor": 136
+          },
+          "asked": {
+            "clearnet": 0,
+            "i2p": 150,
+            "tor": 150
+          },
+          "errors": {
+            "The peer disconnected (SOCKS5 proxy": 4,
+            "no answer before the deadline": 5,
+            "the promise linked to the Async was dropped": 14
+          },
+          "seconds": 156,
+          "usableHeard": {
+            "clearnet": 0,
+            "i2p": 2070,
+            "tor": 2997
+          }
+        },
+        "historyDays": 7,
+        "historyKnown": 11422,
+        "onlyFrom": {
+          "btcnodes": 11627,
+          "gossip": 363,
+          "history": 1332,
+          "seeds": 28
+        },
+        "outcomes": {
+          "btcnodes": {
+            "dialled": 18543,
+            "noCompactFilters": 9981,
+            "ok": 6491,
+            "timeout": 1810,
+            "unreachable": 261
+          },
+          "gossip": {
+            "dialled": 5067,
+            "noCompactFilters": 61,
+            "ok": 4249,
+            "timeout": 441,
+            "unreachable": 316
+          },
+          "history": {
+            "dialled": 8578,
+            "noCompactFilters": 1,
+            "ok": 6752,
+            "timeout": 1004,
+            "unreachable": 821
+          },
+          "notInBtcnodes": {
+            "dialled": 2189,
+            "noCompactFilters": 12,
+            "ok": 660,
+            "timeout": 648,
+            "unreachable": 869
+          },
+          "seeds": {
+            "dialled": 169,
+            "noCompactFilters": 14,
+            "ok": 128,
+            "timeout": 25,
+            "unreachable": 2
+          }
+        },
+        "seeds": {
+          "endpoints": 169,
+          "seeds": 9
+        },
+        "sources": {
+          "btcnodes": 18543,
+          "gossip": 5067,
+          "history": 8578,
+          "seeds": 169
+        },
+        "unmatchedRecords": 0
+      },
+      "knotsStuck": 60,
+      "knotsUsable": 925,
       "medianFeeFilterSatPerKvB": 100,
       "networks": {
         "clearnet": {
-          "atTip": 1140,
-          "behind": 0,
-          "dialled": 6343,
-          "noCompactFilters": 4383,
-          "stuckAtSplit": 0,
-          "usable": 1140
+          "atTip": 1206,
+          "behind": 2,
+          "dialled": 6822,
+          "noCompactFilters": 4574,
+          "stuckAtSplit": 2,
+          "usable": 1209
         },
         "i2p": {
-          "atTip": 2810,
-          "behind": 2,
-          "dialled": 4696,
-          "noCompactFilters": 1719,
-          "stuckAtSplit": 1,
-          "usable": 2812
+          "atTip": 2909,
+          "behind": 35,
+          "dialled": 5068,
+          "noCompactFilters": 1627,
+          "stuckAtSplit": 32,
+          "usable": 2985
         },
         "tor": {
-          "atTip": 2472,
-          "behind": 0,
-          "dialled": 7063,
-          "noCompactFilters": 3546,
-          "stuckAtSplit": 0,
-          "usable": 2472
+          "atTip": 2863,
+          "behind": 30,
+          "dialled": 8842,
+          "noCompactFilters": 3792,
+          "stuckAtSplit": 27,
+          "usable": 2957
         }
       },
-      "observedTip": 973818,
-      "stuckAtSplit": 1,
-      "usable": 6424,
+      "observedTip": 973877,
+      "stuckAtSplit": 61,
+      "usable": 7151,
       "wholeNetworkFamilies": {
-        "Core": 14317,
-        "Knots": 1707,
-        "btcd": 15,
-        "other": 33
+        "Core": 15135,
+        "Knots": 1954,
+        "btcd": 18,
+        "other": 37
       }
     }
   ]
