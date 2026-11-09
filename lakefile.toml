@@ -6,7 +6,7 @@ defaultTargets = ["WinnowCensus", "census-test", "census-input"]
 [[require]]
 name = "winnow"
 git = "https://github.com/winnowwallet/winnow-lean.git"
-rev = "bce5d97c0d317bef862cb616ef47d71603df100a"
+rev = "a3ade55e134257dc91e80d9f4f0e150359496a80"
 subDir = "Lean"
 
 [[lean_lib]]
