@@ -52,7 +52,7 @@ def previousSummary (dir : System.FilePath) (today : String) : IO (Option Previo
     if n.endsWith ".json" && (CensusCatalog.day (n.dropEnd 5).toString).isSome then some (n.dropEnd 5).toString else none
   let some day := (days.filter (· < today)).qsort (· < ·) |>.back? | return none
   let text ← IO.FS.readFile (dir / s!"{day}.json")
-  return (Json.parse text).toOption.map (PreviousSnapshot.ofSummary day)
+  return (Text.parseJson text).toOption.map (PreviousSnapshot.ofSummary day)
 
 def overlayCounts (keys : Array (String × Overlay)) : Json :=
   Json.mkObj ([Overlay.clearnet, .tor, .i2p].map fun o => (o.name, toJson (keys.filter (·.2 == o)).size))
@@ -175,15 +175,15 @@ def gather (a : Args) : IO UInt32 := do
 
 /-- Outcome counts per source over the dial's records. -/
 def annotate (a : Args) : IO UInt32 := do
-  let some report := (Json.parse (← IO.FS.readFile (← a.req "--report"))).toOption | throw (IO.userError "report")
+  let some report := (Text.parseJson (← IO.FS.readFile (← a.req "--report"))).toOption | throw (IO.userError "report")
   let sources := parseSources (← IO.FS.readFile (← a.req "--sources"))
   let summaryPath ← a.req "--summary"
-  let some summary := (Json.parse (← IO.FS.readFile summaryPath)).toOption | throw (IO.userError "summary")
+  let some summary := (Text.parseJson (← IO.FS.readFile summaryPath)).toOption | throw (IO.userError "summary")
   let mut table : Std.HashMap String (Std.HashMap String Nat) := {}
   let mut unmatched := 0
   for line in (← IO.FS.readFile (← a.req "--records")).splitOn "\n" do
     if line.trimAscii.isEmpty then continue
-    let some r := (Json.parse line).toOption | throw (IO.userError "record")
+    let some r := (Text.parseJson line).toOption | throw (IO.userError "record")
     let host := (r.getObjValAs? String "host").toOption.getD ""
     let port := (r.getObjValAs? Nat "port").toOption.getD 0
     let outcome := (r.getObjValAs? String "outcome").toOption.getD "?"
@@ -201,7 +201,7 @@ def annotate (a : Args) : IO UInt32 := do
 def knownCommand (a : Args) : IO UInt32 := do
   let path ← a.req "--known"
   let known := Known.parse ((← readIfExists path).bind String.fromUTF8? |>.getD "")
-  let some peers := (Json.parse (← IO.FS.readFile (← a.req "--peers"))).toOption | throw (IO.userError "peers.json")
+  let some peers := (Text.parseJson (← IO.FS.readFile (← a.req "--peers"))).toOption | throw (IO.userError "peers.json")
   match known.merge peers (a.nat "--keep-days" 90) with
   | .error e => IO.eprintln s!"census-input known: {e}"; return 1
   | .ok m =>

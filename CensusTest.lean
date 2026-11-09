@@ -144,6 +144,15 @@ def main : IO UInt32 := do
      (PreviousSnapshot.ofSummary "d" (Json.mkObj [("inputSHA256", "cc"), ("dialled", 7),
        ("input", Json.mkObj [("btcnodes", Json.mkObj [("sha256", "dd"), ("nodes", 9)])])])).sha256 == some "dd")
   check "a snapshot parses" ((Snapshot.parse parsed.compress "x").toOption.map (·.nodes.size) == some 1)
+  -- btcnodes is outside text: `Json.parse` multiplies an exponent out, and a large enough one ends the process (SEC-040)
+  let started ← IO.monoMsNow
+  let huge := Snapshot.parse "{\"timestamp\": 1793385294, \"latest_height\": 1e99999999, \"nodes\": {\"1.2.3.4:8333\": []}}" "x"
+  let tiny := Snapshot.parse "{\"timestamp\": 1e-99999999, \"latest_height\": 973855, \"nodes\": {\"1.2.3.4:8333\": []}}" "x"
+  let refused := huge.toOption.isNone && tiny.toOption.isNone
+  let took := (← IO.monoMsNow) - started
+  check "a snapshot with a huge exponent is refused at once" (refused && took < 1000) s!"refused {refused}, {took} ms"
+  check "an exponent inside a string is only text"
+    ((Snapshot.parse "{\"latest_height\": 973855, \"nodes\": {\"1e99999999:8333\": []}}" "x").toOption.map (·.nodes.size) == some 1)
   let known := Known.parse "93.184.216.34:8333 2026-10-01\n93.184.216.34:8333 2026-10-20\nnot-a-host:8333 2026-10-20\n10.0.0.1:8333 2026-10-20\n"
   check "history keeps the latest day and refuses what the census never dials" (known.size == 1 && known.get? "93.184.216.34:8333" == some "2026-10-20")
   let peersDoc := Json.mkObj [("date", "2026-10-30"), ("networks", Json.mkObj [("clearnet", Json.arr #[Json.mkObj [("host", "93.184.216.35"), ("port", 8333)]]),
