@@ -1,5 +1,6 @@
 import Lean.Data.Json
 import Winnow.IO.Census
+import Winnow.Text.Json
 import WinnowCensus.Overlay
 
 /-! # The day's dial list, from more than one source
@@ -88,8 +89,14 @@ def PreviousSnapshot.ofSummary (date : String) (j : Json) : PreviousSnapshot :=
   | some b => { date, sha256 := jsonStr? b "sha256", nodes := jsonNat? b "nodes" }
   | none => { date, sha256 := jsonStr? j "inputSHA256", nodes := jsonNat? j "dialled" }
 
+/-- The btcnodes snapshot, read with winnow-lean's bounded `parseJson` (SEC-040): the file comes from outside,
+and `Json.parse` multiplies an exponent out, so `"latest_height": 1e999999999` costs seconds and
+`1e9999999999` ends the process (`INTERNAL PANIC: Nat.pow exponent is too big`), losing the day's whole
+dial list. A refused snapshot is `unreadable`, as any other bad one, and history, seeds and gossip still
+fill the list. census-test: "a snapshot parses", "a snapshot with a huge exponent is refused at once",
+"an exponent inside a string is only text". -/
 def Snapshot.parse (text : String) (sha256 : String) : Except String Snapshot := do
-  let j ← Json.parse text
+  let j ← Winnow.Text.parseJson text
   let .obj nodes ← j.getObjVal? "nodes" | throw "no nodes object"
   let int? (k : String) : Option Int := (j.getObjValAs? Int k).toOption
   return { nodes := nodes.toArray.map (·.1), latestHeight := int? "latest_height", timestamp := int? "timestamp", sha256 }
