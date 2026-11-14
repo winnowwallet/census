@@ -1,0 +1,129 @@
+{"wholeNetworkFamilies":
+ {"other": 29, "btcd": 22, "Knots": 1728, "Core": 14665},
+ "usable": 6740,
+ "stuckAtSplit": 42,
+ "splitHeight": 961632,
+ "sample": 0,
+ "recordsSHA256":
+ "5d17e4ee6828aa09dca2db441480177d8dc7d19b33bcb6cdf7cec63cf82ab9fb",
+ "processingRevision": "c15c8496e7873c967eea0226199364a865f81e67",
+ "processedAt": "2026-11-14T15:45:55Z",
+ "peerListSHA256":
+ "ba42f4680285789d51fbd7030a380f4e754d242a888ab5f528c2813a687ab118",
+ "outcomes":
+ {"unreachable": 673, "timeout": 4459, "ok": 6740, "noCompactFilters": 9704},
+ "observedTip": 975807,
+ "observationEndedAt": "2026-11-14T15:45:51Z",
+ "networks":
+ {"tor":
+  {"usable": 2492,
+   "stuckAtSplit": 16,
+   "noCompactFilters": 3455,
+   "dialled": 9628,
+   "behind": 18,
+   "atTip": 2427},
+  "i2p":
+  {"usable": 2994,
+   "stuckAtSplit": 24,
+   "noCompactFilters": 1788,
+   "dialled": 5183,
+   "behind": 28,
+   "atTip": 2923},
+  "clearnet":
+  {"usable": 1254,
+   "stuckAtSplit": 2,
+   "noCompactFilters": 4461,
+   "dialled": 6765,
+   "behind": 5,
+   "atTip": 1241}},
+ "medianFeeFilterSatPerKvB": 100,
+ "inputSHA256":
+ "ddc664614bc4f66660f8a2bc4acd347828df5ce357761d8c1107c711c9de51a4",
+ "input":
+ {"unmatchedRecords": 0,
+  "sources": {"seeds": 168, "history": 8494, "gossip": 5088, "btcnodes": 19215},
+  "seeds": {"seeds": 9, "endpoints": 168},
+  "outcomes":
+  {"seeds": {"unreachable": 1, "timeout": 18, "ok": 149, "dialled": 168},
+   "notInBtcnodes":
+   {"unreachable": 449,
+    "timeout": 948,
+    "ok": 949,
+    "noCompactFilters": 15,
+    "dialled": 2361},
+   "history":
+   {"unreachable": 416,
+    "timeout": 1757,
+    "ok": 6320,
+    "noCompactFilters": 1,
+    "dialled": 8494},
+   "gossip":
+   {"unreachable": 242,
+    "timeout": 1134,
+    "ok": 3651,
+    "noCompactFilters": 61,
+    "dialled": 5088},
+   "btcnodes":
+   {"unreachable": 224,
+    "timeout": 3511,
+    "ok": 5791,
+    "noCompactFilters": 9689,
+    "dialled": 19215}},
+  "onlyFrom": {"seeds": 26, "history": 1068, "gossip": 423, "btcnodes": 12504},
+  "historyKnown": 12444,
+  "historyDays": 7,
+  "gossip":
+  {"usableHeard": {"tor": 3179, "i2p": 1909, "clearnet": 0},
+   "seconds": 236,
+   "errors":
+   {"the promise linked to the Async was dropped": 46,
+    "no answer before the deadline": 2,
+    "The peer disconnected (SOCKS5 proxy": 7},
+   "asked": {"tor": 150, "i2p": 150, "clearnet": 0},
+   "answered": {"tor": 101, "i2p": 144, "clearnet": 0},
+   "alreadyListed": 4665,
+   "addresses": 244800,
+   "added": {"tor": 331, "i2p": 92, "clearnet": 0}},
+  "endpoints": 21576,
+  "date": "2026-11-14",
+  "byOverlay": {"tor": 9628, "i2p": 5183, "clearnet": 6765},
+  "btcnodes":
+  {"timestamp": 1794665490,
+   "status": "ok",
+   "sha256": "4e2edc80b04aa9ca697f35eca43b8c4dffb8c429da181797a64a3faf5affebd4",
+   "problems": [],
+   "previous":
+   {"sha256":
+    "45dacbf6abb0db53efb64dd0b1487ed15025f72c3105840d2db5194fcc674a79",
+    "nodes": 17855,
+    "date": "2026-11-13"},
+   "nodes": 19221,
+   "latestHeight": 975803,
+   "dialable": 19215}},
+ "handshakeLatencyMsMedian": 5453,
+ "generatedAt": "2026-11-14T14:32:41Z",
+ "families":
+ {"other":
+  {"usable": 2,
+   "stuckAtSplit": 0,
+   "medianFeeFilterSatPerKvB": 1000,
+   "behind": 0,
+   "atTip": 1},
+  "btcd": {"usable": 16, "stuckAtSplit": 0, "behind": 0, "atTip": 16},
+  "Knots":
+  {"usable": 823,
+   "stuckAtSplit": 41,
+   "medianFeeFilterSatPerKvB": 1000,
+   "behind": 45,
+   "atTip": 681},
+  "Core":
+  {"usable": 5899,
+   "stuckAtSplit": 1,
+   "medianFeeFilterSatPerKvB": 100,
+   "behind": 6,
+   "atTip": 5893}},
+ "expectedRecords": 21576,
+ "dialled": 21576,
+ "completeRun": true,
+ "behind": 51,
+ "aheadOfTip": 98}
