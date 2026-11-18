@@ -7,7 +7,9 @@ listener each on the tailnet. Winnow's Automatic peer routing finds them by
 name and sends Tor and I2P Bitcoin peer connections through them; the census
 job itself runs its own Tor and i2pd on the Actions runner and does not use
 these VMs. How the wallet uses them is in
-[winnow's peer-gateway guide](https://github.com/winnowwallet/winnow/blob/main/docs/peer-gateways.md).
+[winnow-lean's peer-gateway guide](https://github.com/winnowwallet/winnow-lean/blob/main/docs/peer-gateways.md)
+(the Swift app's is
+[winnow's](https://github.com/winnowwallet/winnow/blob/main/docs/peer-gateways.md)).
 
 This recipe first appeared in the closed winnowwallet/winnow#146. On
 2026-09-29 `provision.py` rendered cloud-init byte-identical to the deployed
@@ -42,6 +44,15 @@ proxies, not exit nodes, and applications must use them explicitly with
 remote DNS.
 
 ## The I2P census mirror
+
+**Historical (noted 2026-11-18).** No wallet build fetches this mirror. Since
+the Swift app's change of 2026-10-13 (winnowwallet/winnow `e5ce950`, "Ship the
+census list with each build instead of downloading it"), and in winnow-lean,
+each build bundles the census list and the app downloads none, so
+`CensusCatalog.i2pMirror` is in neither wallet's code and nothing verifies a
+signature at run time. The rest of this section describes the mirror as it was
+set up on the I2P VM and is kept as a record of that deployment; the
+statements about what the wallet does with it are no longer true.
 
 `CensusCatalog.i2pMirror` in the wallet
 (`yts2d2oyrsz2eytnofuutgnsixymdkj2nmcmmpfv3aofzsnjt4eq.b32.i2p`) is served
@@ -150,9 +161,10 @@ python3 check-peer.py 100.75.175.127 9050 PEER.onion 8333
 python3 check-peer.py 100.74.30.8 4447 PEER.b32.i2p 8333
 ```
 
-From a Mac on the tailnet, winnow's `scripts/check-live-gateways` exercises
-discovery, the I2P mirror and handshakes through both gateways; the
-2026-09-29 run is recorded in winnow's
+From a Mac on the tailnet, `scripts/check-live-gateways` in winnowwallet/winnow
+(the Swift app) discovers both gateways and completes a handshake through each
+with peers from the census list a build would ship; the
+2026-09-29 run, which also exercised the I2P mirror, is recorded in winnow's
 `docs/security/evidence/live-gateways-2026-09-29.md`.
 
 ```sh

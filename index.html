@@ -24,9 +24,11 @@
         <p class="eyebrow">DAILY BITCOIN NETWORK OBSERVATIONS</p>
         <h1>Which Bitcoin peers answer?</h1>
         <p class="sub">
-          We connect to the endpoints in the BTCNodes snapshot using Winnow’s
-          handshake and record the results. See who answers, who advertises
-          compact filters, and which heights they report.
+          We connect to the day’s list of endpoints using Winnow’s handshake
+          and record the results: the BTCNodes snapshot, the peers this census
+          published in the last week, the DNS seeds, and Tor and I2P peers that
+          known peers name. See who answers, who advertises compact filters,
+          and which heights they report.
         </p>
         <p class="note">
           One endpoint is one network address, not necessarily one distinct
@@ -150,9 +152,9 @@
         <p>
           On 13 September 2026 the same 23,061 responding endpoints were
           compared with the BTCNodes input: 7,524 advertised compact filters
-          here against 7,526 there, a difference of two. BTCNodes supplies the
-          input list, so this checks consistency with the source rather than
-          confirming the result independently.
+          here against 7,526 there, a difference of two. BTCNodes supplied the
+          whole input list then, so this checks consistency with the source
+          rather than confirming the result independently.
         </p>
         <p>
           Bitnod.es and Coin Dance count deduplicated addresses, and Bitnod.es
@@ -193,9 +195,15 @@
         <h2><span class="index">05</span>Run the census yourself</h2>
         <p>
           The crawler is a small Swift command-line program that uses the
-          wallet’s own connection code. It records version messages, service
-          bits, reported heights and fee filters, and sends nothing about your
-          wallet to anyone.
+          connection code of Winnow’s Swift app. It records version messages,
+          service bits, reported heights and fee filters, and sends nothing
+          about your wallet to anyone. The daily run first gathers its list
+          with a Lean program, <code>census-input</code>; the
+          <a
+            href="https://github.com/winnowwallet/census#run-it-yourself"
+            >README</a
+          >
+          has those commands.
         </p>
         <p>
           On macOS with Swift 6, the commands below run a small clearnet sample.
@@ -241,9 +249,9 @@ curl -fsSL https://btcnodes.io/api/v1/snapshots/latest/ -o snapshot.json
           the endpoint advertised compact-filter support. It does not prove that
           the endpoint returns valid filters; the wallet checks that on the
           peers it actually uses. A near-tip candidate reported a height within
-          100 blocks, in either direction, of the reference tip in the input
-          snapshot. A reported height on its own does not identify which chain a
-          peer follows.
+          100 blocks, in either direction, of the reference tip: the median
+          height that the run’s filter peers reported. A reported height on its
+          own does not identify which chain a peer follows.
         </p>
         <p>
           The counts are of endpoints, not of distinct machines or operators.
@@ -256,8 +264,11 @@ curl -fsSL https://btcnodes.io/api/v1/snapshots/latest/ -o snapshot.json
         <p>
           The downloadable catalog canonicalizes and deduplicates endpoints,
           applies public-address and network-prefix diversity rules to clearnet,
-          validates overlay addresses, and retains at most 2,000 candidates per
-          overlay. The GUI wallet uses direct clearnet. This census measures Tor
+          validates overlay addresses, and lists every verified Tor and I2P
+          service, with no cap per overlay beyond the wallet’s bounds (a 4 MB
+          file, 65,536 entries per network). The wallet dials
+          clearnet directly and reaches Tor and I2P peers through SOCKS
+          gateways its user runs. This census measures Tor
           and I2P through external SOCKS proxies. A diagnostic sample, or a run
           whose Tor or I2P router was not healthy, is never published in place
           of production data. When a run fails, the previous good artifacts stay
@@ -281,8 +292,8 @@ curl -fsSL https://btcnodes.io/api/v1/snapshots/latest/ -o snapshot.json
             href="https://github.com/winnowwallet/census/actions/workflows/peer-census.yml"
             >full run logs and retained raw observations</a
           >, and <a href="https://winnowwallet.com">Winnow wallet</a>. BTCNodes
-          is the input source, so agreement with its endpoint list is not
-          independent confirmation.
+          is the largest source of the dial list, so agreement with its
+          endpoint list is not independent confirmation.
         </p>
       </details>
       <footer>
