@@ -7,11 +7,13 @@ import WalletCore
 ///
 ///     {"algorithm":"ed25519","publicKey":"<32 bytes hex>","signature":"<64 bytes hex>"}
 ///
-/// Ed25519 over the domain tag and the file's exact bytes. The wallet's
-/// `CensusSignature` (winnowwallet/winnow, `Sources/WalletCore/Network/Peers/
-/// CensusSignature.swift`) is what verifies it; the two are held to the same
-/// bytes by a known-answer vector in both repositories' tests, and the wallet
-/// trusts only the public keys compiled into its `CensusPublisher`.
+/// Ed25519 over the domain tag and the file's exact bytes. The wallet's build
+/// is what verifies it (winnowwallet/winnow-lean, `scripts/import-census` with
+/// `scripts/ed25519_verify.py`), before the list is bundled into the app; the
+/// app itself checks no signature. That import trusts only the public keys in
+/// its `scripts/census-public-key.txt`. A known-answer vector holds this tool
+/// to the same bytes (`tests/test_contract.py`, and `CensusTest.lean` for the
+/// Lean Ed25519).
 ///
 ///   WinnowCensus keygen                            a fresh secret and its public key
 ///   WinnowCensus sign [--key-env NAME] FILE        writes FILE.sig with the secret in $NAME
@@ -62,13 +64,13 @@ enum Signing {
     }
 
     /// Prints a fresh secret, once, in the form the Actions secret takes, and
-    /// the public key the wallet compiles in.
+    /// the public key the wallet's build pins.
     static func keygen() throws {
         let key = Curve25519.Signing.PrivateKey()
         print("\(defaultKeyVariable)=\(key.rawRepresentation.base64EncodedString())")
         print("public key: \(key.publicKey.rawRepresentation.hex)")
         print("Store the first line as the census repository's \(defaultKeyVariable) Actions secret; "
-              + "paste the public key into the wallet's CensusPublisher.trustedKeysHex.")
+              + "add the public key to scripts/census-public-key.txt in winnowwallet/winnow-lean.")
     }
 
     static func sign(_ arguments: [String]) throws {
