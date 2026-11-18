@@ -53,7 +53,7 @@
         ? "Accepted full run"
         : "Historical run; full-run provenance unavailable");
     if (age > 7) {
-      freshness.textContent += " · Catalog too old for a wallet refresh.";
+      freshness.textContent += " · Latest published run is over a week old.";
       freshness.classList.add("warning");
     }
     const near = Object.values(latest.networks || {}).reduce(
