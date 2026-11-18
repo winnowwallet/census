@@ -7,7 +7,9 @@ listener each on the tailnet. Winnow's Automatic peer routing finds them by
 name and sends Tor and I2P Bitcoin peer connections through them; the census
 job itself runs its own Tor and i2pd on the Actions runner and does not use
 these VMs. How the wallet uses them is in
-[winnow's peer-gateway guide](https://github.com/winnowwallet/winnow/blob/main/docs/peer-gateways.md).
+[winnow-lean's peer-gateway guide](https://github.com/winnowwallet/winnow-lean/blob/main/docs/peer-gateways.md)
+(the Swift app's is
+[winnow's](https://github.com/winnowwallet/winnow/blob/main/docs/peer-gateways.md)).
 
 This recipe first appeared in the closed winnowwallet/winnow#146. On
 2026-09-29 `provision.py` rendered cloud-init byte-identical to the deployed
@@ -41,48 +43,32 @@ attestation. Neither gateway advertises or accepts routes; they are SOCKS5
 proxies, not exit nodes, and applications must use them explicitly with
 remote DNS.
 
-## The I2P census mirror
+## The I2P census mirror (retired)
 
-`CensusCatalog.i2pMirror` in the wallet
-(`yts2d2oyrsz2eytnofuutgnsixymdkj2nmcmmpfv3aofzsnjt4eq.b32.i2p`) is served
-from the I2P VM. It was added on 2026-09-28, after provisioning, so it is not
-part of cloud-init; the files in [`i2p-mirror/`](i2p-mirror) are copied
-byte-for-byte from the running guest:
+The I2P VM used to serve a copy of `peers.json` and `peers.json.sig` as an I2P
+site (`yts2d2oyrsz2eytnofuutgnsixymdkj2nmcmmpfv3aofzsnjt4eq.b32.i2p`), for a
+wallet told to use I2P alone, which could not reach the census's website. It
+was added by hand on 2026-09-28 and was never part of cloud-init.
 
-| File | Guest path | Role |
-| --- | --- | --- |
-| `winnow-census-mirror.conf` | `/etc/i2pd/gateway-tunnels.d/` | i2pd HTTP server tunnel: I2P port 80 → `127.0.0.1:8480`, keys `winnow-census-mirror.dat` |
-| `winnow-census-http.service` | `/etc/systemd/system/` | `python3 -m http.server` on loopback 8480 serving `/var/lib/winnow-census-mirror`, sandboxed with `DynamicUser` |
-| `winnow-census-sync` | `/usr/local/bin/` | Fetches `peers.json` and `peers.json.sig` from census.winnowwallet.com with size and time limits, checks the JSON parses, then moves both into place |
-| `winnow-census-sync.service`, `.timer` | `/etc/systemd/system/` | Runs the sync a minute after boot and every 30 minutes |
+No wallet build has fetched it since the Swift app's 0.8.3 (winnowwallet/winnow
+`e5ce950`, 2026-10-13, "Ship the census list with each build instead of
+downloading it"): that app and winnow-lean bundle the list at build time and
+download none. The tunnel configuration, the two services, the sync script and
+its timer were removed from this repository on 2026-11-18; they are in its
+history under `gateways/i2p-mirror/`.
 
-The mirror is untrusted: the wallet verifies the census signature, and the
-sync script copies files without checking it. It replaces `peers.json` just
-before `peers.json.sig`, so a fetch in that instant can pair a new list with
-the old signature; the wallet then rejects it and retries later.
-
-**Back up the destination keys.** The `.b32.i2p` address is compiled into the
-wallet and is derived from `/var/lib/i2pd/winnow-census-mirror.dat`
-(`i2pd:i2pd`, mode 0640). Rebuilding the I2P VM without that file gives the
-mirror a new address and breaks I2P-only census downloads until a wallet
-release carries it. Keep a copy in your secret store, never in this
-repository.
-
-To add the mirror to a freshly provisioned I2P VM, restore the keys first so
-i2pd reuses the address, then install and start the pieces:
+If the mirror is still running on the I2P guest, this stops it. A Swift build
+older than 0.8.3 set to I2P alone then gets no new list:
 
 ```sh
-# on the I2P guest, with this directory copied to ~/i2p-mirror
-sudo install -o i2pd -g i2pd -m 0640 winnow-census-mirror.dat /var/lib/i2pd/
-sudo install -m 0644 ~/i2p-mirror/winnow-census-mirror.conf /etc/i2pd/gateway-tunnels.d/
-sudo install -m 0755 ~/i2p-mirror/winnow-census-sync /usr/local/bin/
-sudo install -m 0644 ~/i2p-mirror/winnow-census-*.service ~/i2p-mirror/winnow-census-sync.timer /etc/systemd/system/
-sudo mkdir -p /var/lib/winnow-census-mirror/census
-sudo systemctl daemon-reload
-sudo systemctl enable --now winnow-census-http winnow-census-sync.timer
-sudo systemctl start winnow-census-sync
+# on the I2P guest
+sudo systemctl disable --now winnow-census-sync.timer winnow-census-http
+sudo rm /etc/i2pd/gateway-tunnels.d/winnow-census-mirror.conf
 sudo systemctl restart i2pd
 ```
+
+The destination keys (`/var/lib/i2pd/winnow-census-mirror.dat`) are what the
+address is derived from; keep or destroy them deliberately.
 
 Both guests also run [`winnow-tailscale-ssh.service`](winnow-tailscale-ssh.service),
 which waits for tailscaled and runs `tailscale set --ssh`; whether Tailscale
@@ -150,9 +136,10 @@ python3 check-peer.py 100.75.175.127 9050 PEER.onion 8333
 python3 check-peer.py 100.74.30.8 4447 PEER.b32.i2p 8333
 ```
 
-From a Mac on the tailnet, winnow's `scripts/check-live-gateways` exercises
-discovery, the I2P mirror and handshakes through both gateways; the
-2026-09-29 run is recorded in winnow's
+From a Mac on the tailnet, `scripts/check-live-gateways` in winnowwallet/winnow
+(the Swift app) discovers both gateways and completes a handshake through each
+with peers from the census list a build would ship; the
+2026-09-29 run, which also exercised the I2P mirror since retired, is recorded in winnow's
 `docs/security/evidence/live-gateways-2026-09-29.md`.
 
 ```sh

@@ -22,7 +22,8 @@ func selectionRank(_ entry: PublicationCatalog.Entry, latencyMs: Int, overlay: O
 }
 
 /// Canonicalize before deduplication. Order by `selectionRank`, then enforce
-/// address diversity and overlay caps. Source dates are never rebuilt.
+/// clearnet address diversity; overlays are not capped. Source dates are
+/// never rebuilt.
 func makePeerList(_ records: [Record], tip: Int32, date: String) throws -> PeerList {
     var networks: [String: [PublicationCatalog.Entry]] = ["clearnet": [], "tor": [], "i2p": []]
     var candidates: [(PublicationCatalog.Entry, Int, OverlayNetwork)] = []

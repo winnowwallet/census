@@ -138,6 +138,37 @@ class HealthTests(unittest.TestCase):
                 collect(root, summary, raw, self.now, offline=True)
             self.assertEqual(output.read_bytes(), previous)
 
+    def test_collection_keeps_the_named_nodes_file_and_the_one_before(self):
+        with tempfile.TemporaryDirectory() as temporary, patch('collect_health.subprocess.check_output', return_value='a' * 40):
+            root = Path(temporary)
+            census = root / 'census'
+            census.mkdir()
+            others = {'peers.json': b'{}', 'health-nodes-notes.txt': b'not an archive',
+                      'health-nodes-short.json.gz': b'not named by a hash'}
+            for name, content in others.items():
+                (census / name).write_bytes(content)
+
+            def archives():
+                return sorted(p.name for p in census.glob('health-nodes-*.json.gz') if p.name not in others)
+
+            names = []
+            for day in (11, 12, 13):
+                collect(root, *run(day), self.now, offline=True)
+                names.append(json.loads((census / 'health.json').read_text())['nodesArtifact']['file'])
+                self.assertEqual(archives(), sorted(names[-2:]))
+            self.assertEqual(len(set(names)), 3)
+            # A collection that fails before the pointer is written removes nothing.
+            summary, raw = run(13, 99)
+            summary['sample'] = 1
+            with self.assertRaises(ValueError):
+                collect(root, summary, raw, self.now, offline=True)
+            self.assertEqual(archives(), sorted(names[-2:]))
+            for name, content in others.items():
+                self.assertEqual((census / name).read_bytes(), content)
+            # Replaying the last run names the same file, and does not remove it.
+            collect(root, *run(13), self.now, offline=True)
+            self.assertEqual(archives(), [names[-1]])
+
     def test_invalid_mining_capture_keeps_previous_snapshot_and_updates_nodes(self):
         with tempfile.TemporaryDirectory() as temporary, patch('collect_health.subprocess.check_output', return_value='a' * 40):
             root = Path(temporary)

@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 
@@ -23,6 +24,18 @@ def atomic(path, data):
         f.write(data)
         name = f.name
     os.replace(name, path)
+
+
+NODES_FILE = re.compile(r'health-nodes-[a-f0-9]{64}\.json\.gz')
+
+
+def named_nodes_file(pointer):
+    """The nodes file health.json names now, or None when there is no readable pointer."""
+    try:
+        name = json.loads(pointer.read_bytes())['nodesArtifact']['file']
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    return name if isinstance(name, str) and NODES_FILE.fullmatch(name) else None
 
 
 def encoded(value):
@@ -110,9 +123,16 @@ def collect(root, summary, raw, now, offline=False, clock=lambda: dt.datetime.no
     digest = hashlib.sha256(nodes_data).hexdigest()
     filename = 'health-nodes-' + digest + '.json.gz'
     report['nodesArtifact'] = dict(file=filename, sha256=digest)
+    pointer = root / 'census' / 'health.json'
+    previous = named_nodes_file(pointer)
     atomic(root / 'census' / filename, nodes_data)
     # Commit pointer last. If anything above fails, the last good report stays.
-    atomic(root / 'census' / 'health.json', encoded(report))
+    atomic(pointer, encoded(report))
+    # Only with the new pointer in place, remove the nodes files that nothing names. The one the previous
+    # pointer named stays until the next run: a page that read the old pointer may still ask for it.
+    for old in (root / 'census').glob('health-nodes-*.json.gz'):
+        if NODES_FILE.fullmatch(old.name) and old.name not in (filename, previous):
+            old.unlink(missing_ok=True)
     print(f"Health: {len(nodes)} endpoints, {len(report['acceptedDays'])} days, {len(eligible)} assessed")
 
 

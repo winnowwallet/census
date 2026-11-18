@@ -14,8 +14,10 @@ served a thin or stale list (23–26 October) was a day lost or skewed. The dial
   `shrank`: fewer than three quarters of the previous day's nodes.
 * **history**: every endpoint the census published in the last `historyDays` days (`census/known.txt`, one
   `host:port day` line per endpoint, the day it was last published).
-* **seeds** and **gossip**: clearnet peers from the DNS seeds, and peers of every overlay that known peers
-  name when asked (`getaddr`, answered in `addr`/`addrv2`), see `Gossip.lean`.
+* **seeds** and **gossip**: clearnet peers from the DNS seeds, and peers that known peers name when asked
+  (`getaddr`, answered in `addr`/`addrv2`), see `Gossip.lean`. What gossip names is taken only for the
+  overlays whose peers were asked (`census-input gather --gossip-clearnet`, `--gossip-tor`, `--gossip-i2p`);
+  the daily run asks Tor and I2P peers.
 
 Each endpoint is reduced to the Swift tool's canonical `host:port` (`PublicationCatalog.canonicalHost`):
 numeric public clearnet hosts (`CensusCatalog.canonicalHost`), v3 onions with a valid checksum and

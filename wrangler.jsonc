@@ -1,6 +1,6 @@
 {
-  // The census site as a Worker with static assets: index.html and one JSON
-  // per day under census/, assembled into site/ by the workflows. No Worker
+  // The census site as a Worker with static assets: index.html, assets/,
+  // health/ and census/, assembled into site/ by the workflows. No Worker
   // script; Cloudflare serves the files. The custom domain below makes
   // Cloudflare create the DNS record and certificate itself.
   "$schema": "node_modules/wrangler/config-schema.json",

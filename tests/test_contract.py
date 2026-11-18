@@ -128,10 +128,12 @@ class ContractTests(unittest.TestCase):
         peers.write_bytes(peers.read_bytes() + b'\n')
         self.assertNotEqual(subprocess.run([str(BIN), 'verify', str(peers)], capture_output=True).returncode, 0)
     def test_signature_known_answer_matches_the_wallet(self):
-        # The wallet's CensusSignatureTests verify this same signature file
-        # over this same payload under this same key (CryptoKit's Ed25519
-        # signatures are randomised, so the vector is a file to verify, not a
-        # signing output to reproduce). Both repositories pin it.
+        # A known answer: this signature file over this payload under this
+        # key (CryptoKit's Ed25519 signatures are randomised, so the vector is
+        # a file to verify, not a signing output to reproduce). CensusTest.lean
+        # pins the same key for the Lean Ed25519. The Swift wallet's
+        # CensusSignatureTests pinned it too, until the wallet stopped
+        # downloading the list.
         payload = self.root / 'payload.json'
         payload.write_bytes(b'{"date":"2026-09-14"}')
         (self.root / 'payload.json.sig').write_text(json.dumps(
